@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Unity 客户端与 C# 游戏开发面试题库">
+  <title>Unity 游戏客户端面试题库</title>
+  <link rel="stylesheet" href="vendor/vue.css">
+  <style>
+    :root { --theme-color: #2f6feb; }
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif; }
+    .app-nav { margin-right: 24px; }
+    .markdown-section h1, .markdown-section h2, .markdown-section h3 { font-weight: 650; }
+    .markdown-section code { border-radius: 4px; }
+    .markdown-section table { display: table; width: 100%; }
+    .app-sub-sidebar li:before { content: ""; }
+  </style>
+</head>
+<body>
+  <div id="app">正在加载题库…</div>
+  <script>
+    window.$docsify = {
+      name: 'Unity 游戏客户端面试题库',
+      repo: 'https://github.com/doRedlive/gc-interview-nodes',
+      loadSidebar: true,
+      subMaxLevel: 2,
+      auto2top: true,
+      homepage: 'docs/面试题库总目录.md',
+      relativePath: true,
+      search: {
+        paths: 'auto',
+        placeholder: '搜索题目、关键词或 API',
+        noData: '没有找到匹配内容',
+        depth: 4,
+        hideOtherSidebarContent: false
+      },
+      copyCode: { buttonText: '复制代码', errorText: '复制失败', successText: '已复制' }
+    };
+  </script>
+  <script src="vendor/docsify.min.js"></script>
+  <script src="vendor/search.min.js"></script>
+</body>
+</html>
