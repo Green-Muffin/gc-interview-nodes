@@ -1,68 +1,72 @@
 <!doctype html>
 <html lang="zh-CN">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="Unity 客户端与 C# 游戏开发面试题库">
-  <title>Unity 游戏客户端面试题库</title>
-  <link rel="stylesheet" href="vendor/vue.css">
-  <style>
-    :root { --theme-color: #2f6feb; }
-    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif; }
-    .app-nav { margin-right: 24px; }
-    .markdown-section h1, .markdown-section h2, .markdown-section h3 { font-weight: 650; }
-    .markdown-section code { border-radius: 4px; }
-    .markdown-section table { display: table; width: 100%; }
-    .app-sub-sidebar li:before { content: ""; }
-    #theme-toggle { position: fixed; top: 14px; right: 18px; z-index: 20; border: 1px solid rgba(127,127,127,.35); border-radius: 999px; padding: 7px 12px; background: var(--toggle-bg, #fff); color: var(--toggle-fg, #333); cursor: pointer; font-size: 13px; }
-    body.theme-dark #theme-toggle { --toggle-bg: #252a34; --toggle-fg: #eee; }
-    body.theme-dark { background: #181a1f; color: #d7dae0; }
-    body.theme-dark .sidebar, body.theme-dark .search .search-keyword, body.theme-dark .app-sub-sidebar { background: #20232b; }
-    body.theme-dark .markdown-section, body.theme-dark .markdown-section h1, body.theme-dark .markdown-section h2, body.theme-dark .markdown-section h3 { color: #e6e8eb; }
-    body.theme-dark .markdown-section blockquote, body.theme-dark .markdown-section code { background: #252a34; color: #e5e7eb; }
-    body.theme-dark .markdown-section table tr { background: #181a1f; border-color: #3a404c; }
-    body.theme-dark .markdown-section table tr:nth-child(2n) { background: #20232b; }
-    body.theme-dark .markdown-section td, body.theme-dark .markdown-section th { border-color: #3a404c; }
-    body.theme-dark .markdown-section pre > code { background: #111318; color: #e6e8eb; }
-    body.theme-dark .cover-main { color: #e6e8eb; }
-  </style>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Unity 游戏客户端面试题库</title>
+<script>
+(function(){var pref=null;try{pref=localStorage.getItem('gc-interview-theme')}catch(e){} document.documentElement.dataset.theme=(pref==='dark'||pref==='light')?pref:(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');})();
+</script>
+<link rel="stylesheet" href="vendor/vue.css">
+<style>
+:root{--theme-color:#215dc4;--bg:#fff;--panel:#f6f7f9;--fg:#263247;--muted:#526079;--border:#d5dbe5;--code:#f3f5f8;color-scheme:light}
+:root[data-theme=dark]{--theme-color:#8bb8ff;--bg:#16191f;--panel:#1e232c;--fg:#e6eaf1;--muted:#b6bfce;--border:#404858;--code:#232a35;color-scheme:dark}
+html,body{background:var(--bg);color:var(--fg)}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Microsoft YaHei",sans-serif}
+.content,.markdown-section{background:var(--bg);color:var(--fg)}
+.sidebar,.sidebar-toggle{background:var(--panel);border-color:var(--border)}
+.sidebar{padding-top:64px}
+.sidebar>h1 a,.sidebar ul li a,.sidebar ul li p,.sidebar strong{color:var(--fg)}
+.sidebar ul li.active>a,.sidebar ul li a:hover{color:var(--theme-color)}
+.markdown-section h1,.markdown-section h2,.markdown-section h3,.markdown-section h4,.markdown-section h5,.markdown-section h6,.markdown-section strong{color:var(--fg)}
+.markdown-section a,.search a{color:var(--theme-color)}
+.markdown-section blockquote{color:var(--muted);border-color:var(--theme-color)}
+.markdown-section pre,.markdown-section pre>code,.markdown-section code{background:var(--code);color:var(--fg);text-shadow:none}
+.markdown-section pre:after{color:var(--muted)}
+.markdown-section table{display:block;max-width:100%;overflow-x:auto}
+.markdown-section tr{background:var(--bg);border-color:var(--border)}
+.markdown-section tr:nth-child(2n){background:var(--panel)}
+.markdown-section th,.markdown-section td,.markdown-section hr{border-color:var(--border)}
+.search,.search .matching-post{border-color:var(--border)!important}
+.search input{background:var(--panel);color:var(--fg)}
+.search input::placeholder{color:var(--muted)}
+.search .search-keyword{color:var(--theme-color);font-style:normal}
+.search h2,.search p,.search .empty{color:var(--fg)}
+.search .clear-button svg{fill:var(--muted)}
+#theme-toggle{position:fixed;top:12px;right:88px;z-index:40;min-height:44px;padding:8px 16px;border:1px solid var(--border);border-radius:24px;background:var(--panel);color:var(--fg);font:inherit;font-size:14px;cursor:pointer}
+#theme-toggle:focus-visible{outline:3px solid var(--theme-color);outline-offset:3px}
+.markdown-section{padding-top:72px}
+[data-theme=dark] .token.comment,[data-theme=dark] .token.prolog{color:#a5b2c5}
+[data-theme=dark] .token.keyword,[data-theme=dark] .token.selector{color:#c9a5ff}
+[data-theme=dark] .token.string,[data-theme=dark] .token.attr-value{color:#a4d991}
+[data-theme=dark] .token.function,[data-theme=dark] .token.class-name{color:#8edbe8}
+[data-theme=dark] .token.number,[data-theme=dark] .token.boolean{color:#ffbd8a}
+[data-theme=dark] .token.operator,[data-theme=dark] .token.punctuation{color:#d4dce8;background:transparent}
+@media(max-width:600px){#theme-toggle{right:76px}.markdown-section{padding:72px 18px 30px}}
+</style>
 </head>
 <body>
-  <button id="theme-toggle" type="button" aria-label="切换主题">🌙 深色</button>
-  <div id="app">正在加载题库…</div>
-  <script>
-    (function () {
-      var saved = localStorage.getItem('gc-interview-theme');
-      var dark = saved ? saved === 'dark' : window.matchMedia('(prefers-color-scheme: dark)').matches;
-      document.body.classList.toggle('theme-dark', dark);
-      window.toggleTheme = function () {
-        dark = !dark;
-        document.body.classList.toggle('theme-dark', dark);
-        localStorage.setItem('gc-interview-theme', dark ? 'dark' : 'light');
-        updateThemeButton();
-      };
-      function updateThemeButton() {
-        var button = document.getElementById('theme-toggle');
-        if (button) button.textContent = dark ? '☀️ 浅色' : '🌙 深色';
-      }
-      document.addEventListener('DOMContentLoaded', function () {
-        document.getElementById('theme-toggle').addEventListener('click', window.toggleTheme);
-        updateThemeButton();
-      });
-    })();
-    window.$docsify = {
-      name: 'Unity 游戏客户端面试题库',
-      repo: 'https://github.com/doRedlive/gc-interview-nodes',
-      loadSidebar: true,
-      subMaxLevel: 2,
-      auto2top: true,
-      homepage: '面试题库总目录.md',
-      relativePath: true,
-      search: { paths: 'auto', placeholder: '搜索题目、关键词或 API', noData: '没有找到匹配内容', depth: 4, hideOtherSidebarContent: false },
-      copyCode: { buttonText: '复制代码', errorText: '复制失败', successText: '已复制' }
-    };
-  </script>
-  <script src="vendor/docsify.min.js"></script>
-  <script src="vendor/search.min.js"></script>
+<button id="theme-toggle" type="button">切换主题</button>
+<div id="app">正在加载题库…</div>
+<script>
+(function(){
+var button=document.getElementById('theme-toggle'),media=matchMedia('(prefers-color-scheme: dark)'),manual=false;
+try{var saved=localStorage.getItem('gc-interview-theme');manual=saved==='dark'||saved==='light'}catch(e){}
+function apply(dark){document.documentElement.dataset.theme=dark?'dark':'light';button.textContent=dark?'☀ 浅色模式':'☾ 深色模式';button.setAttribute('aria-label',dark?'切换到浅色模式':'切换到深色模式');button.setAttribute('aria-pressed',String(dark));}
+apply(document.documentElement.dataset.theme==='dark');
+button.addEventListener('click',function(){manual=true;var dark=document.documentElement.dataset.theme!=='dark';apply(dark);try{localStorage.setItem('gc-interview-theme',dark?'dark':'light')}catch(e){}});
+media.addEventListener('change',function(e){if(!manual)apply(e.matches)});
+})();
+if(location.hash.indexOf('#/docs/')===0){location.replace(location.href.split('#')[0]+'#/'+location.hash.slice(2).replace(/^(docs\/)+/,''));}
+window.$docsify={
+name:'Unity 游戏客户端面试题库',repo:'https://github.com/doRedlive/gc-interview-nodes',
+basePath:'docs/',homepage:'面试题库总目录.md',
+loadSidebar:'https://doredlive.github.io/gc-interview-nodes/_sidebar.md',
+relativePath:false,subMaxLevel:2,auto2top:true,
+search:{paths:['/面试题库总目录','/CSharp高频题整理','/Unity高频题整理','/算法高频题整理','/网络高频题整理','/Lua高频题整理','/图形学与3D数学题库','/性能分析与工具开发专项题','/Unity性能与工具开发岗位学习路线'],namespace:'gc-notes-v2',placeholder:'搜索题目、关键词或 API',noData:'没有找到匹配内容',depth:4}
+};
+</script>
+<script src="vendor/docsify.min.js"></script>
+<script src="vendor/search.min.js"></script>
 </body>
 </html>
