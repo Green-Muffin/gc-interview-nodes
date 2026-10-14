@@ -14,11 +14,42 @@
     .markdown-section code { border-radius: 4px; }
     .markdown-section table { display: table; width: 100%; }
     .app-sub-sidebar li:before { content: ""; }
+    #theme-toggle { position: fixed; top: 14px; right: 18px; z-index: 20; border: 1px solid rgba(127,127,127,.35); border-radius: 999px; padding: 7px 12px; background: var(--toggle-bg, #fff); color: var(--toggle-fg, #333); cursor: pointer; font-size: 13px; }
+    body.theme-dark #theme-toggle { --toggle-bg: #252a34; --toggle-fg: #eee; }
+    body.theme-dark { background: #181a1f; color: #d7dae0; }
+    body.theme-dark .sidebar, body.theme-dark .search .search-keyword, body.theme-dark .app-sub-sidebar { background: #20232b; }
+    body.theme-dark .markdown-section, body.theme-dark .markdown-section h1, body.theme-dark .markdown-section h2, body.theme-dark .markdown-section h3 { color: #e6e8eb; }
+    body.theme-dark .markdown-section blockquote, body.theme-dark .markdown-section code { background: #252a34; color: #e5e7eb; }
+    body.theme-dark .markdown-section table tr { background: #181a1f; border-color: #3a404c; }
+    body.theme-dark .markdown-section table tr:nth-child(2n) { background: #20232b; }
+    body.theme-dark .markdown-section td, body.theme-dark .markdown-section th { border-color: #3a404c; }
+    body.theme-dark .markdown-section pre > code { background: #111318; color: #e6e8eb; }
+    body.theme-dark .cover-main { color: #e6e8eb; }
   </style>
 </head>
 <body>
+  <button id="theme-toggle" type="button" aria-label="切换主题">🌙 深色</button>
   <div id="app">正在加载题库…</div>
   <script>
+    (function () {
+      var saved = localStorage.getItem('gc-interview-theme');
+      var dark = saved ? saved === 'dark' : window.matchMedia('(prefers-color-scheme: dark)').matches;
+      document.body.classList.toggle('theme-dark', dark);
+      window.toggleTheme = function () {
+        dark = !dark;
+        document.body.classList.toggle('theme-dark', dark);
+        localStorage.setItem('gc-interview-theme', dark ? 'dark' : 'light');
+        updateThemeButton();
+      };
+      function updateThemeButton() {
+        var button = document.getElementById('theme-toggle');
+        if (button) button.textContent = dark ? '☀️ 浅色' : '🌙 深色';
+      }
+      document.addEventListener('DOMContentLoaded', function () {
+        document.getElementById('theme-toggle').addEventListener('click', window.toggleTheme);
+        updateThemeButton();
+      });
+    })();
     window.$docsify = {
       name: 'Unity 游戏客户端面试题库',
       repo: 'https://github.com/doRedlive/gc-interview-nodes',
@@ -27,13 +58,7 @@
       auto2top: true,
       homepage: '面试题库总目录.md',
       relativePath: true,
-      search: {
-        paths: 'auto',
-        placeholder: '搜索题目、关键词或 API',
-        noData: '没有找到匹配内容',
-        depth: 4,
-        hideOtherSidebarContent: false
-      },
+      search: { paths: 'auto', placeholder: '搜索题目、关键词或 API', noData: '没有找到匹配内容', depth: 4, hideOtherSidebarContent: false },
       copyCode: { buttonText: '复制代码', errorText: '复制失败', successText: '已复制' }
     };
   </script>
