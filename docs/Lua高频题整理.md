@@ -1,216 +1,163 @@
-# Lua 高频面试题与答案
+# Lua 面试题与答案
 
-> 语言、对象模型、GC、跨语言生命周期与常见性能题；明确 Lua 5.1／5.4 及 LuaJIT 差异。 共 14 题。
-
-本专题以概念、机制、边界和实战追问组织；示例可能省略外围业务代码。
+> 共 14 题。按主题分类，答案直接放在题目后。
 
 [返回题库总目录](面试题库总目录.md)
 
 ## 目录
 
-| 主题 | 题号 |
+| 模块 | 题号 |
 | --- | --- |
-| [一、语言与对象模型](#一、语言与对象模型) | 1–4 |
-| [二、内存与跨语言生命周期](#二、内存与跨语言生命周期) | 5–8 |
-| [三、排序与字符串](#三、排序与字符串) | 9–10 |
-| [四、执行模型、元方法与协程](#四、执行模型、元方法与协程) | 11–14 |
+| [一、语言与对象模型](#%E4%B8%80%E3%80%81%E8%AF%AD%E8%A8%80%E4%B8%8E%E5%AF%B9%E8%B1%A1%E6%A8%A1%E5%9E%8B) | 1–6 |
+| [二、GC 与生命周期](#%E4%BA%8C%E3%80%81GC%20%E4%B8%8E%E7%94%9F%E5%91%BD%E5%91%A8%E6%9C%9F) | 7–10 |
+| [三、常见函数与协程](#%E4%B8%89%E3%80%81%E5%B8%B8%E8%A7%81%E5%87%BD%E6%95%B0%E4%B8%8E%E5%8D%8F%E7%A8%8B) | 11–14 |
 
 ## 一、语言与对象模型
 
-### 1. Lua 有哪些基本类型？哪些值是假？
+### 1. Lua 有哪些基本数据类型？哪些值为假？
 
 **答案：**
 
-Lua 5.1／5.4 都有八种基本类型：nil、boolean、number、string、function、userdata、thread、table。只有 nil 和 false 在条件判断中为假，0 与空字符串都为真。
+八种基本类型是 nil、boolean、number、string、function、table、userdata 和 thread。条件判断中只有 nil、false 为假，0 和空字符串都为真。
 
-Lua 5.3／5.4 的 number 区分整数与浮点子类型；Lua 5.1 和 LuaJIT 的具体数值实现要另看配置。`thread` 通常表示 Lua 协程状态，不等于操作系统线程。
+Lua 5.3／5.4 的 number 有整数和浮点子类型；thread 表示 Lua 协程，不是操作系统线程。
 
-参考：[Lua 5.4 类型](https://www.lua.org/manual/5.4/manual.html#2.1)。
-
-### 2. table 的数组部分、nil、长度与遍历有什么坑？
+### 2. Lua table 的底层结构和特点是什么？
 
 **答案：**
 
-table 可同时作为序列和映射，但有空洞的数值键集合不应当作连续数组使用。给一个键赋 nil 会移除对应条目；不要用 `#t` 统计任意字典的元素数。
+标准实现通常结合数组区和哈希区，适合的正整数键进入数组区，其他键通过哈希查找。table 可表示序列、字典、对象和模块。
 
-`ipairs` 适合从 1 开始的连续序列，遇到首个缺失位置停止；`pairs` 用于键值遍历，不保证普通 table 的业务排序。需要稳定顺序时显式维护键数组并排序。元方法与版本也可能影响遍历接口。
+赋 nil 会删除键；有空洞的表不适合当连续序列，`#t` 不能用于统计任意字典条目。重哈希可按分布调整两区大小。
 
-标准 Lua 的 table 实现结合数组区与哈希区，适合的正整数键可进入数组区，其他键使用哈希区；并非所有整数键都必然在数组区。重哈希会评估键分布并可能在两区间迁移条目，不能理解为两个完全独立的容器各自固定扩容。
-
-参考：[Lua 5.4 table 实现](https://www.lua.org/source/5.4/ltable.c.html)。
-
-### 3. Lua 如何用 table 和元表实现面向对象？`.` 与 `:` 有什么区别？
+### 3. pairs 和 ipairs 有什么区别？
 
 **答案：**
 
-Lua 不要求内建 class 关键字。常用 table 保存实例状态，用元表的 `__index` 查找共享方法；继承可组织为查找链，多态由方法查找与替换实现。
+pairs 遍历表中的键值，普通 table 不保证业务排序；ipairs 从索引 1 开始依次读取，到第一个缺失位置停止。
+
+连续数组可用 ipairs，字典用 pairs；需要固定顺序时维护键数组并排序。
+
+### 4. 元表和元方法是什么？__index、__newindex 如何使用？
+
+**答案：**
+
+元表是控制另一个值特定行为的 table。常见元方法有 __index、__newindex、__add 和 __call。
+
+对普通 table，读缺失键可触发 __index，给缺失键赋值可触发 __newindex；已有键通常直接读写。元方法内部可用 rawget／rawset 绕过相应拦截，避免递归。
+
+### 5. Lua 如何实现面向对象？点号和冒号有什么区别？
+
+**答案：**
+
+用 table 保存对象状态，元表的 __index 指向共享方法表，可继续建立继承查找链。
 
 ```lua
 local Actor = {}
 Actor.__index = Actor
-
 function Actor.new(hp)
-    return setmetatable({ hp = hp }, Actor)
+    return setmetatable({hp = hp}, Actor)
 end
-
 function Actor:damage(amount)
-    self.hp = math.max(0, self.hp - amount)
+    self.hp = self.hp - amount
 end
-
 local actor = Actor.new(100)
 actor:damage(10) -- 等价于 actor.damage(actor, 10)
 ```
 
-把可变实例数据放在实例里，避免原型上的共享 table 意外让所有实例共用状态。元表实现复用，不自动提供所有语言级访问控制。
+冒号语法隐式传 self；实例可变数据放在实例表中，避免所有对象共享同一份可变状态。
 
-参考：[Programming in Lua：对象](https://www.lua.org/pil/16.html)。
-
-### 4. 闭包与 upvalue 是什么？为何定时器容易保留对象？
+### 6. 闭包和 upvalue 是什么？
 
 **答案：**
 
-闭包可访问词法作用域中的外部局部变量，这些被引用的变量通常称为 upvalue。回调被定时器、事件表或全局表长期保存时，也可能让其捕获的对象继续可达。
+闭包是函数及其捕获环境。内部函数访问外部局部变量时，这些被捕获变量称为 upvalue，即使外层函数结束，也可被仍存活的闭包保留。
 
-不要把捕获理解为创建时的值快照，也不应只在函数返回时认为捕获对象已释放。停止业务流程时解除回调，区分共享配置、实例状态与长期缓存。
+捕获通常引用变量，而非简单创建值快照。事件、定时器长期保存闭包时，可能连带保留对象，需要在业务结束时解除引用。
 
-## 二、内存与跨语言生命周期
+## 二、GC 与生命周期
 
-### 5. Lua 的 GC 是什么机制？不同版本能用同一套答案吗？
-
-**答案：**
-
-不能忽略版本。Lua 5.1 官方手册描述增量标记清扫；Lua 5.4 提供增量和分代模式。LuaJIT 也不能仅凭 Lua 语法兼容就视为使用同一实现。
-
-GC 追踪可达性，孤立循环引用一般可以回收；仍被根引用或注册表持有的对象不会因为“业务不用了”自动消失。调 GC 参数需要结合分配率、存活量与停顿测量，不应频繁强制完整回收掩盖生命周期问题。
-
-参考：[Lua 5.1 GC](https://www.lua.org/manual/5.1/manual.html#2.10)、[Lua 5.4 GC](https://www.lua.org/manual/5.4/manual.html#2.5)。
-
-### 6. Lua 内存持续上涨，如何定位泄漏？
+### 7. Lua 的 GC 是什么机制？
 
 **答案：**
 
-重复同一业务进入／退出流程，在稳定时点记录内存与对象数量。排查全局表、module 缓存、事件／计时器、未结束协程、闭包 upvalue、registry 引用和 userdata 的持有关系。
+GC 从根引用追踪可达对象，回收不可达对象；普通孤立循环引用可以回收。Lua 5.1 使用增量标记清扫，Lua 5.4 提供增量和分代模式，LuaJIT 的实现另行确认。
 
-可结合对象标记、引用图、调试库与弱表观察定位保活路径，但遍历诊断本身也可能临时持有对象。仅看到 `collectgarbage("count")` 不下降不能直接证明原生资源泄漏；跨 C#／C 的桥接还需分别观察各侧堆。
+频繁分配、长寿命缓存和未清理回调都可能增加内存和回收压力。调整 GC 参数前先观察分配与存活量。
 
-修复应明确哪个所有者本应解除引用，而不是到处把变量设为 nil。
-
-### 7. 弱表有什么用途？能自动解决所有缓存泄漏吗？
+### 8. Lua 如何检查和处理内存泄漏？
 
 **答案：**
 
-元表中的 `__mode` 可设置弱键 `k`、弱值 `v` 或同时弱 `kv`。弱引用不会像普通强引用那样单独阻止相应对象回收，适合某些辅助索引与缓存。
+反复执行进入／退出流程，对比对象数量与内存，检查全局表、模块缓存、事件、定时器、协程、闭包和 registry 的引用链。
 
-弱表内容可能消失，使用时必须处理缺失；它也不能替代外部资源的确定性释放。弱键与值之间的关联语义、字符串等特殊值行为要按 Lua 版本理解，不要假设所有键和值都以相同方式被回收。
+移除本应结束的强引用，按生命周期注销回调并释放桥接资源。`collectgarbage("count")` 只是一个观测值，不能单凭未下降就认定所有内存泄漏。
 
-参考：[Programming in Lua：弱表](https://www.lua.org/pil/17.html)。
-
-### 8. Lua 与 C# 互相持有对象时如何管理生命周期？
+### 9. 弱表有什么作用？
 
 **答案：**
 
-桥接可能用 userdata、注册表引用、托管委托或句柄关联两侧对象。若 Lua 保存 C# 回调，而 C# 又长期持有 Lua 函数包装器，单侧 GC 未必能独立识别整体业务生命周期。
+元表 `__mode` 可设 k、v 或 kv，表示弱键、弱值或两者。弱引用不会单独使相应可回收对象保持存活，适合辅助索引或缓存。
 
-建立显式订阅／解除、Acquire／Release 或 Dispose 契约，先停止回调再释放桥接引用；业务退出时清理定时器与事件。不要把某个框架的包装器实现视为所有 Lua 插件的保证，也不要假定 Lua GC 会自动释放全部 Unity 原生资源。
+条目可能被回收，因此查询要处理缺失；弱表不能替代文件、句柄等外部资源的确定性释放。
 
-## 三、排序与字符串
-
-### 9. `table.sort` 用什么算法？稳定吗？比较函数有什么要求？
+### 10. Lua 与 C#／C++ 交互时如何管理对象生命周期？
 
 **答案：**
 
-标准 Lua 5.4 的 `ltablib.c` 使用快速排序体系的实现；具体实现属于版本细节，不能推广到所有 LuaJIT 或定制运行时。API 不保证稳定排序。
+桥接可用 userdata、registry 引用、托管委托和句柄关联对象。双方互相持有时，单侧 GC 不一定能判断完整业务关系。
 
-比较函数应表达“a 严格排在 b 前面”，例如 `a.score < b.score`，不能写成 `<=`。相等元素之间应同时返回 false，规则还应保持传递一致。
+明确订阅／解除、获取／释放和 Dispose 契约；退出时先停回调，再解除桥接引用。动态加载和异步返回还要检查接收对象是否仍有效。
 
-需要可重现的同分顺序时，可用原始索引等作为第二关键字。排序作用于序列区间，返回值不是一个新 table。
+## 三、常见函数与协程
 
-参考：[Lua 5.4 table.sort](https://www.lua.org/manual/5.4/manual.html#pdf-table.sort)、[官方排序实现](https://www.lua.org/source/5.4/ltablib.c.html)。
-
-### 10. Lua 如何拼接字符串？大量拼接如何处理？
+### 11. Lua 字符串如何拼接？大量拼接怎么优化？
 
 **答案：**
 
-`..` 用于连接字符串。字符串不可变，循环中不断把长结果与新片段连接，可能重复复制已有内容。
+少量字符串使用 `..`。循环拼接长字符串可能反复复制，可将片段放入数组，再调用 table.concat。
 
 ```lua
 local parts = {}
-for i = 1, 1000 do
-    parts[#parts + 1] = tostring(i)
-end
+for i = 1, 100 do parts[#parts + 1] = tostring(i) end
 local text = table.concat(parts, ",")
 ```
 
-大量片段可先保存到连续数组再 `table.concat`，并注意峰值内存；少量表达式拼接不必全部改写。nil 不是可直接放进 concat 区间的字符串元素。
+片段区间应连续且类型符合 concat 要求，同时关注最终结果的峰值内存。
 
-参考：[Lua 字符串连接](https://www.lua.org/pil/3.4.html)、[table.concat](https://www.lua.org/manual/5.4/manual.html#pdf-table.concat)。
-
-## 四、执行模型、元方法与协程
-
-### 11. Lua 为什么适合嵌入游戏？如何执行代码？
+### 12. table.sort 使用什么算法？比较函数怎么写？
 
 **答案：**
 
-Lua 体积小、接口精简，标准实现以 C 编写，便于宿主嵌入。变量可关联不同类型的值，函数是一等值，table 可组织序列、映射与对象。
+标准 Lua 5.4 的实现属于快速排序体系，API 不保证稳定。比较器应表达严格的“排在前面”，例如 `a.score < b.score`，不能用 `<=`。
 
-标准 Lua 通常把源码转换成字节码再由虚拟机执行；LuaJIT 的执行策略应另看实现。常见用途是配置、剧情、AI 和插件逻辑。热更新还需要状态迁移与版本兼容设计，不是替换脚本即可自动完成。
+需要相等元素顺序可预测时，加入原始索引等第二关键字；排序作用于原序列，不返回新 table。
 
-### 12. `__index`、`__newindex` 与其他元方法如何触发？
+### 13. Lua 协程的原理、状态和使用方法是什么？
 
 **答案：**
 
-元表可通过 `setmetatable` 关联。对普通 table，读取缺失键可触发 `__index`，给缺失键赋值可触发 `__newindex`；已有键的正常访问通常不经过这两者。元方法还包括 `__add`、`__call` 等。
+协程是协作式执行单元：resume 启动／恢复，yield 主动让出；暂停后保留状态，下次继续。状态包括 suspended、running、normal、dead。
 
 ```lua
-local object = setmetatable({}, {
-    __index = function(_, key)
-        if key == "hp" then return 100 end
-    end,
-    __newindex = function(t, key, value)
-        rawset(t, key, value)
-    end
-})
-print(object.hp) -- 100
-object.hp = 80
-print(object.hp) -- 80，直接读取已有键
-```
-
-`rawget`／`rawset` 绕过相应元方法，常用于避免递归触发。参考：[Lua 元表与元方法](https://www.lua.org/manual/5.4/manual.html#2.4)。
-
-### 13. Lua 协程有哪些状态？resume 与 yield 如何传值？
-
-**答案：**
-
-状态包括 suspended、running、normal、dead；normal 可指正在等待其恢复的其他协程返回的协程。`resume` 启动或恢复，`yield` 主动让出；`resume` 首个返回值表示成功与否，随后是结果或错误。
-
-```lua
-local co = coroutine.create(function(value)
-    local nextValue = coroutine.yield(value + 1)
+local co = coroutine.create(function(x)
+    local nextValue = coroutine.yield(x + 1)
     return nextValue * 2
 end)
 print(coroutine.resume(co, 10)) -- true, 11
 print(coroutine.resume(co, 7))  -- true, 14
-print(coroutine.status(co))    -- dead
 ```
 
-协程本身不创建并行的操作系统线程；长时间不让出会阻塞同线程其他工作。参考：[Lua 协程](https://www.lua.org/manual/5.4/manual.html#2.6)。
+resume 首个返回值表示成功与否。协程不自动创建并行线程，同线程死循环仍会阻塞其他工作。
 
-### 14. Lua 与 C／C++ 如何通过 C API 交互？
+### 14. Lua 和 C 如何通过 C API 交互？
 
 **答案：**
 
-C API 使用虚拟栈交换值。C 调用 Lua 时加载代码、压入函数和参数，通过 `lua_pcall` 等保护调用检查结果；Lua 调用 C 时，注册的 `lua_CFunction` 读取参数、压入结果并返回结果数量。
+C API 使用虚拟栈传递参数和返回值。C 调 Lua 时加载代码、压入函数与参数、保护调用并取结果；Lua 调 C 时将 lua_CFunction 注册到环境，函数读取栈参数、压入结果并返回结果数量。
 
-```cpp
-static int add(lua_State* L) {
-    lua_Number a = luaL_checknumber(L, 1);
-    lua_Number b = luaL_checknumber(L, 2);
-    lua_pushnumber(L, a + b);
-    return 1;
-}
-// lua_register(L, "add", add);
-```
+桥接需要保持栈平衡，检查参数和错误，明确 userdata 的所有权。Lua 错误传播与 C++ 清理机制的衔接也应正确处理。
 
-桥接需约定栈平衡、userdata 所有权及错误处理。Lua 的错误传播方式与宿主配置有关，尤其要处理 C++ RAII 与错误跳转边界。
+## 参考资料
 
-参考：[Lua C API](https://www.lua.org/manual/5.4/manual.html#4)。相关所有权问题见第 8 题及 [C++ 专题](C++高频题整理.md)。
+- [Lua 5.4 手册](https://www.lua.org/manual/5.4/manual.html)

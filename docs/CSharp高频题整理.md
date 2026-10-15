@@ -1,26 +1,24 @@
-# C# 高频面试题与答案
+# C# 面试题与答案
 
-> C# 语言与通用 .NET 知识；新增资料中的重复题已合并。 共 135 题。
-
-本专题以概念、机制、边界和实战追问组织；示例可能省略外围业务代码。
+> 共 135 题。按主题分类，答案直接放在题目后。
 
 [返回题库总目录](面试题库总目录.md)
 
 ## 目录
 
-| 主题 | 题号 |
+| 模块 | 题号 |
 | --- | --- |
-| [一、基础与类型语义](#一、基础与类型语义) | 1–22 |
-| [二、面向对象与多态](#二、面向对象与多态) | 23–32 |
-| [三、泛型、反射与比较规则](#三、泛型、反射与比较规则) | 33–44 |
-| [四、委托、闭包与事件](#四、委托、闭包与事件) | 45–54 |
-| [五、内存管理与资源释放](#五、内存管理与资源释放) | 55–77 |
-| [六、集合与迭代器](#六、集合与迭代器) | 78–88 |
-| [七、LINQ 查询与性能](#七、LINQ%20查询与性能) | 89–108 |
-| [八、异步与并发](#八、异步与并发) | 109–129 |
-| [九、异常处理](#九、异常处理) | 130–132 |
-| [十、设计与测试基础](#十、设计与测试基础) | 133–134 |
-| [十一、运行时与执行模型](#十一、运行时与执行模型) | 135 |
+| [一、基础与类型语义](#%E4%B8%80%E3%80%81%E5%9F%BA%E7%A1%80%E4%B8%8E%E7%B1%BB%E5%9E%8B%E8%AF%AD%E4%B9%89) | 1–22 |
+| [二、面向对象与多态](#%E4%BA%8C%E3%80%81%E9%9D%A2%E5%90%91%E5%AF%B9%E8%B1%A1%E4%B8%8E%E5%A4%9A%E6%80%81) | 23–32 |
+| [三、泛型、反射与比较规则](#%E4%B8%89%E3%80%81%E6%B3%9B%E5%9E%8B%E3%80%81%E5%8F%8D%E5%B0%84%E4%B8%8E%E6%AF%94%E8%BE%83%E8%A7%84%E5%88%99) | 33–44 |
+| [四、委托、闭包与事件](#%E5%9B%9B%E3%80%81%E5%A7%94%E6%89%98%E3%80%81%E9%97%AD%E5%8C%85%E4%B8%8E%E4%BA%8B%E4%BB%B6) | 45–54 |
+| [五、内存管理与资源释放](#%E4%BA%94%E3%80%81%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86%E4%B8%8E%E8%B5%84%E6%BA%90%E9%87%8A%E6%94%BE) | 55–77 |
+| [六、集合与迭代器](#%E5%85%AD%E3%80%81%E9%9B%86%E5%90%88%E4%B8%8E%E8%BF%AD%E4%BB%A3%E5%99%A8) | 78–88 |
+| [七、LINQ 查询与性能](#%E4%B8%83%E3%80%81LINQ%20%E6%9F%A5%E8%AF%A2%E4%B8%8E%E6%80%A7%E8%83%BD) | 89–108 |
+| [八、异步与并发](#%E5%85%AB%E3%80%81%E5%BC%82%E6%AD%A5%E4%B8%8E%E5%B9%B6%E5%8F%91) | 109–129 |
+| [九、异常处理](#%E4%B9%9D%E3%80%81%E5%BC%82%E5%B8%B8%E5%A4%84%E7%90%86) | 130–132 |
+| [十、设计与测试基础](#%E5%8D%81%E3%80%81%E8%AE%BE%E8%AE%A1%E4%B8%8E%E6%B5%8B%E8%AF%95%E5%9F%BA%E7%A1%80) | 133–134 |
+| [十一、运行时与执行模型](#%E5%8D%81%E4%B8%80%E3%80%81%E8%BF%90%E8%A1%8C%E6%97%B6%E4%B8%8E%E6%89%A7%E8%A1%8C%E6%A8%A1%E5%9E%8B) | 135–135 |
 
 ## 一、基础与类型语义
 
@@ -122,7 +120,7 @@ numbers.Add(x);                        // 存储 int 不需要装箱
 
 泛型集合能够直接保存指定类型的数据，避免非泛型容器把值类型当作 `object` 存储时的装箱。但将泛型值传给 `object` 参数，或执行某些接口转换时，仍可能装箱。频繁装箱会增加 GC 压力。
 
-拆箱取值不代表结果必然落在栈上；值也可以写入对象字段、数组元素或保存在寄存器中。原材料缺失的值类型／引用类型对比已归入第 1–2 题，不能用“栈上／堆上”作为二者定义。
+拆箱取值不代表结果必然落在栈上；值也可以写入对象字段、数组元素或保存在寄存器中。值类型和引用类型的区别是值语义与引用语义，而不是固定存储在栈或堆。
 
 ### 8. `object`、`dynamic`、`var` 有什么区别？
 
@@ -219,7 +217,7 @@ value = 100; // values[0] 变为 100
 
 引用不能指向生命周期不足的局部变量。`ref` 返回可以用于高性能数据访问，但必须遵守 C# 的引用安全规则。
 
-### 13. `in` 参数为什么不一定比普通参数快？
+### 13. in 参数适合哪些场景？
 
 **答案：**
 
@@ -284,8 +282,6 @@ int? score = null;
 int actualScore = score ?? 0;
 ```
 
-参考：[Microsoft 官方说明](https://learn.microsoft.com/en-us/dotnet/csharp/nullable-references)。
-
 ### 18. `?.`、`??`、`??=` 和空值宽容运算符 `!` 有什么区别？
 
 **答案：**
@@ -317,26 +313,32 @@ cache ??= new Dictionary<string, int>();
 
 `MemberwiseClone()` 是浅拷贝；`record class` 的 `with` 默认也不会递归复制所有成员。对引用类型元素执行 `ToList()` 或 `ToArray()` 同样只是创建新容器，元素仍引用原对象。
 
-### 21. 如何分析字符串表达式的分配，而不是死记“几个临时对象”？
+### 21. 下面的字符串代码会产生哪些对象？
 
 **答案：**
-
-先修正代码，再定义统计范围：新建对象、临时对象、驻留字面量和最终结果不是同一概念。
 
 ```csharp
 string a = new string(new[] { 'a', 'b', 'c' });
 a = (a.ToUpperInvariant() + "123").Substring(0, 2);
 ```
 
-在常见实现与这些输入下，可逐项检查 char 数组、初始字符串、大写结果、拼接结果和子串结果，共五项新建对象候选；字面量是否计入、结果是否复用及优化行为还要明确。不能将这个数字推广到任意输入与运行时。`string` 不可变，但字符串变量可重新赋值；C# 的 StringBuilder 也不等于 Java 的 StringBuffer。
+按常见实现中的显式分配分析：char 数组、初始字符串、大写字符串、拼接字符串和子串，共五项新建对象候选；字符串字面量通常按驻留常量另计。
 
-### 22. C# 与 C++ 应从哪些维度比较？
+原因是 string 不可变，修改内容通常生成新字符串。具体分配可受运行时优化或结果复用影响；面试时先明确是否统计字面量及最终结果。
+
+### 22. C# 和 C++ 有什么区别？
 
 **答案：**
 
-可比较类型与泛型模型、运行时、内存／资源管理、互操作和部署方式。C# 常依赖托管运行时和 GC，资源通常通过 IDisposable 等管理；C++ 常结合值语义、RAII 和智能指针管理资源。
+| 方面 | C# | C++ |
+| --- | --- | --- |
+| 执行环境 | 通常依赖托管运行时，可使用 JIT／AOT | 通常生成原生程序 |
+| 内存管理 | GC 管托管内存，Dispose 管资源 | RAII、值语义、智能指针 |
+| 类型机制 | class 引用语义、struct 值语义、泛型 | class／struct 均可值语义、模板 |
+| 继承 | 类单继承，可实现多个接口 | 支持多继承 |
+| 底层控制 | 可通过互操作和 unsafe 访问底层 | 布局、所有权和原生接口控制更直接 |
 
-两者都支持多种编程风格，不能说“C# 完全面向对象而 C++ 不是”。C# 可使用 AOT 与底层互操作，C++ 也不等于只能手写 new/delete；性能取决于算法、数据布局、运行时和工具链。
+两者都支持面向对象等风格，实际性能要结合算法、数据布局与运行方式。
 
 ## 二、面向对象与多态
 
@@ -438,7 +440,7 @@ class DogFactory : Factory
 
 它能明确扩展边界，也可能为去虚拟化提供条件，但不能据此保证每次调用都会更快。`sealed` 与不可变、线程安全是不同概念。
 
-### 31. 什么是扩展方法？它会覆盖实例方法吗？
+### 31. 扩展方法是什么？如何调用？
 
 **答案：**
 
@@ -539,20 +541,15 @@ CLR 的泛型实现会根据类型参数和运行时策略生成或共享代码�
 
 这与 C++ 模板常见的编译期实例化机制不同，但具体实现细节取决于运行时。
 
-### 38. 泛型约束为什么有助于减少运行时类型检查？
+### 38. 泛型约束有哪些？有什么作用？
 
 **答案：**
 
-泛型约束在编译期限制类型参数必须满足的条件，让编译器可以安全地调用约束所提供的成员。
+泛型约束声明类型参数必须具备的能力，使泛型代码可以安全地使用相应成员和操作。
 
-```csharp
-static void Reset<T>(T value) where T : IDisposable
-{
-    value.Dispose();
-}
-```
+常见有 class／struct／unmanaged、基类／接口约束、new() 等。例如 `where T : IDisposable` 允许调用 Dispose，`where T : new()` 允许创建 T 实例。
 
-这里编译器能够确认 `T` 实现了 `IDisposable`，不需要通过 `object` 转换再进行运行时类型判断。
+约束可以表达接口契约、减少不必要的运行时检查，但不代表任意约束都会直接带来性能提升。
 
 ### 39. 什么是表达式树？它与 Lambda 有什么区别？
 
@@ -567,25 +564,23 @@ Func<int, int> func = expr.Compile();
 
 表达式树可用于动态查询、规则解析和代码生成，但构建、分析或编译表达式树本身也可能有明显开销。
 
-### 40. 反射为什么可能影响性能？
+### 40. 什么是反射？原理、用途和性能优化方法是什么？
 
 **答案：**
 
-反射需要在运行时查找类型、成员或方法，调用过程也可能比直接调用复杂。频繁反射还可能涉及额外分配。
+反射通过运行时元数据获取类型、字段、属性和方法信息，并可动态创建对象或调用成员。
 
-优化方法：
+常用于序列化、编辑器工具、插件注册和依赖注入。常见入口是 Type、FieldInfo、PropertyInfo、MethodInfo。
 
-- 在初始化阶段缓存 `Type`、`MethodInfo` 等元数据。
-- 避免在热点路径反复反射查找和调用。
-- 对高频调用路径，考虑预生成注册表或委托。
+查找、动态调用和装箱可能增加成本；可缓存元数据、生成工厂／委托，避免在热点重复查找。裁剪／AOT 环境中还需保留被动态访问的类型和成员。
 
-### 41. `Activator.CreateInstance()` 有什么问题？
+### 41. Activator.CreateInstance 如何创建对象？
 
 **答案：**
 
-它可以通过运行时类型创建对象，适合动态创建实例，但相比直接构造调用，通常需要额外的运行时查找和处理。
+它根据运行时 Type 或泛型参数创建实例，适合插件、反射工厂和不知道静态具体类型的场景。
 
-如果需要高频创建普通 C# 对象，可以在初始化阶段建立类型到工厂委托的映射，减少重复反射。
+普通已知类型优先直接构造。高频动态创建可缓存工厂委托，减少重复查找；目标类型还需有可用的构造方式，并处理抽象类型、访问权限和参数不匹配等失败。
 
 ### 42. `IEquatable<T>` 与 `IEqualityComparer<T>` 有什么区别？
 
@@ -606,7 +601,7 @@ Func<int, int> func = expr.Compile();
 
 排序相等与业务上的对象相等不一定相同。例如按年龄比较时，两个人年龄相同，不代表是同一个人。
 
-### 44. 序列化是什么？能否直接保存任意运行时对象？
+### 44. 序列化和反序列化是什么？
 
 **答案：**
 
@@ -670,7 +665,7 @@ int result = f(); // result 为 2
 
 频繁创建捕获局部变量的 Lambda，可能产生额外分配；如果长期保存委托，还可能延长被捕获对象的生命周期。
 
-### 49. Lambda 表达式一定会产生堆分配吗？
+### 49. Lambda 的捕获与内存分配有什么关系？
 
 **答案：**
 
@@ -735,7 +730,7 @@ publisher.Changed -= handler;
 
 但不能为了零分配而牺牲可维护性；应优先优化 性能分析 证明存在问题的路径。
 
-### 53. 为什么公开事件比公开委托字段更合适？
+### 53. event 和公开委托字段有什么区别？
 
 **答案：**
 
@@ -862,7 +857,7 @@ using (var stream = new FileStream(path, FileMode.Open))
 
 值类型则可能内嵌在对象、数组或栈帧中，也可能被装箱，不能简单认为值类型永远位于栈上。
 
-### 64. 为什么 `struct` 作为类字段时不一定产生单独的堆分配？
+### 64. struct 作为局部变量、字段和数组元素时怎样存储？
 
 **答案：**
 
@@ -908,8 +903,6 @@ LOH 的阈值和整理策略属于运行时实现细节，不是 C# 语言规范
 
 典型 .NET LOH 与第 2 代一起回收，通常采用清扫而非每次压缩；支持相应配置的运行时可请求压缩。不要把默认策略说成“永远不压缩”，也不要直接把 .NET 分代与 LOH 规则套到所有 Unity 运行时。
 
-参考：[Microsoft：大对象堆](https://learn.microsoft.com/en-us/dotnet/standard/garbage-collection/large-object-heap)。
-
 ### 67. 什么是内存碎片？
 
 **答案：**
@@ -928,15 +921,15 @@ LOH 的阈值和整理策略属于运行时实现细节，不是 C# 语言规范
 
 写屏障并非只服务于分代 GC；增量或并发标记也可能利用它记录引用变化。具体用途取决于 GC 实现。
 
-### 69. 什么是逃逸分析？C# 一定会把不逃逸的对象分配到栈上吗？
+### 69. 什么是逃逸分析？有什么优化作用？
 
 **答案：**
 
-逃逸分析用于判断对象是否会超出创建位置的作用范围。
+逃逸分析判断对象或引用是否离开当前方法、作用域或线程。例如返回对象、保存到全局字段都可能让它逃逸。
 
-C# 语言并不保证不逃逸对象一定分配在栈上。具体 JIT 优化取决于运行时实现；不能直接把其他语言的栈分配优化规则套用到 C#。
+若能够证明不逃逸，运行时可能消除分配、将数据拆成局部值，或采用其他更轻量存储。具体优化依运行时实现，C# 语言本身不保证所有不逃逸对象都放到栈上。
 
-### 70. `Span<T>` 为什么能够帮助减少内存分配？
+### 70. Span<T> 是什么？有什么作用？
 
 **答案：**
 
@@ -1015,15 +1008,15 @@ finally
 
 同步 `using` 的资源清理语义类似 `try/finally`，即使作用域因异常退出也会尝试释放。它只管理释放时机，不代表操作本身线程安全，也不会自动把同步资源转换为异步资源。
 
-### 75. `GC.Collect()` 能替代 `Dispose()` 吗？为什么不应随意主动触发 GC？
+### 75. GC 和 Dispose 分别负责什么？什么时候调用 GC.Collect？
 
 **答案：**
 
-不能。GC 负责托管内存可达性管理；`Dispose()` 负责确定性地释放对象持有的资源。对象仍被引用时，主动 GC 不会让它凭空变成不可达。
+GC 根据可达性回收托管对象占用的内存；Dispose 用于及时释放文件、连接和原生句柄等资源，通常配合 using。
 
-频繁主动回收可能打乱运行时策略并增加暂停。一般由运行时决定回收时机；需要主动回收时应有明确场景与测量依据。直接拥有原生句柄时，优先考虑 `SafeHandle` 等可靠封装，避免为普通托管类无意义地添加终结器。
+GC.Collect 请求主动回收，但不会让仍有引用的对象变成不可达，也不能替代 Dispose。通常让运行时安排回收；在明确的阶段切换或诊断场景中，确认收益后再主动使用。
 
-### 76. `unsafe` 有什么用？调用外部库一定需要它吗？
+### 76. unsafe 和 P/Invoke 有什么作用？
 
 **答案：**
 
@@ -1085,7 +1078,7 @@ unsafe 允许在相应上下文使用指针等受限制操作，适合部分底�
 
 面向 `IEnumerable<T>` 编程可以降低接口依赖，但它不保证集合可以重复遍历、随机访问或修改。
 
-### 82. 为什么修改 `List<T>` 时可能出现 `InvalidOperationException`？
+### 82. 遍历 List 时如何安全删除元素？
 
 **答案：**
 
@@ -1133,15 +1126,15 @@ for (int i = list.Count - 1; i >= 0; i--)
 
 键应优先使用不可变数据。需要修改键时，先按原状态删除，再用新键插入。`readonly` 引用字段不能保证键对象内部不可变。
 
-### 86. `IReadOnlyList<T>` 代表集合不可变吗？
+### 86. IReadOnlyList 与不可变集合有什么区别？
 
 **答案：**
 
-不代表。它限制通过该接口执行修改，但底层集合可能仍被其他引用修改；集合元素如果是可变对象，也仍然能改变。
+IReadOnlyList 提供只读访问接口，调用方不能通过它增删元素，但底层集合仍可能被其他引用修改。
 
-只读视图、结构不可变的集合和元素深度不可变是三个不同层次。需要稳定快照时，应明确是否只复制容器，还是还需要复制元素。
+不可变集合保证集合结构创建后不被原地修改；若元素是可变引用对象，元素内部仍可能变化。需要稳定数据时，应区分只读接口、结构不可变和深度不可变。
 
-### 87. `IEnumerable<T>` 与 `IEnumerator<T>` 有什么区别？`foreach` 一定产生 GC 吗？
+### 87. IEnumerable、IEnumerator 和 foreach 的原理是什么？
 
 **答案：**
 
@@ -1173,8 +1166,6 @@ var query2 = numbers.Where(n => n % 2 == 0).Select(n => n * 10);
 ```
 
 查询语法会转换成对应方法调用。`Count()`、`ToList()` 等通常直接用方法语法。以下题目若未说明，默认讨论 LINQ to Objects。
-
-参考：[Microsoft 官方说明](https://learn.microsoft.com/en-us/dotnet/csharp/linq/get-started/introduction-to-linq-queries)。
 
 ### 90. 什么是延迟执行？修改数据源后查询结果会改变吗？
 
@@ -1208,8 +1199,6 @@ Console.WriteLine(string.Join(",", query)); // 3,4
 
 因此，对无限序列直接进行完整排序无法得到第一个排序结果。
 
-参考：[Microsoft 官方说明](https://learn.microsoft.com/en-us/dotnet/standard/linq/deferred-execution-lazy-evaluation)。
-
 ### 92. `IEnumerable<T>` 与 `IQueryable<T>` 有什么区别？
 
 **答案：**
@@ -1218,8 +1207,6 @@ Console.WriteLine(string.Join(",", query)); // 3,4
 
 `IQueryable<T>` 继承 `IEnumerable<T>`，但不等于所有操作都在数据库执行。提供程序支持哪些表达式、何时请求数据和如何处理不支持的表达式，都取决于实现。不能把任意 C# 方法默认视为可转换的查询。
 
-参考：[Microsoft 官方说明](https://learn.microsoft.com/en-us/dotnet/api/system.linq.iqueryable-1)。
-
 ### 93. `AsEnumerable()` 和 `ToList()` 有什么区别？
 
 **答案：**
@@ -1227,8 +1214,6 @@ Console.WriteLine(string.Join(",", query)); // 3,4
 `AsEnumerable()` 将后续调用视为面向 `IEnumerable<T>` 的操作，不会立即枚举，也不会自动缓存数据。对查询提供程序而言，它常用于让后续操作采用本地 `Enumerable` 逻辑。
 
 `ToList()` 立即枚举并创建列表，消耗时间和内存，但可以复用这次结果。对远程查询应先尽可能完成可下推的筛选，再决定在哪里切换到本地处理，避免读取不必要的数据。
-
-参考：[AsEnumerable 官方说明](https://learn.microsoft.com/en-us/dotnet/api/system.linq.enumerable.asenumerable)。
 
 ### 94. `Where()` 和 `Select()` 有什么区别？
 
@@ -1258,9 +1243,7 @@ IEnumerable<int> flat = groups.SelectMany(g => g); // 1、2、3
 
 典型场景是从多个订单中取得所有订单项。
 
-参考：[Microsoft 官方说明](https://learn.microsoft.com/en-us/dotnet/csharp/linq/standard-query-operators/projection-operations)。
-
-### 96. 判断是否存在元素，为什么通常使用 `Any()`？`All()` 对空序列返回什么？
+### 96. Any、All 和 Count 有什么区别？
 
 **答案：**
 
@@ -1283,8 +1266,6 @@ IEnumerable<int> flat = groups.SelectMany(g => g); // 1、2、3
 
 要求“唯一”用 `Single` 系列，只要求“首个”用 `First` 系列。`default(int)` 是 0，不能用它区分“没有元素”和“第一个元素就是 0”。
 
-参考：[Microsoft 官方说明](https://learn.microsoft.com/en-us/dotnet/api/system.linq.enumerable.singleordefault)。
-
 ### 98. `OrderBy()` 与 `ThenBy()` 有什么区别？
 
 **答案：**
@@ -1300,8 +1281,6 @@ var sorted = employees
 
 LINQ to Objects 的排序稳定；它返回排序后的序列，不会像 `List<T>.Sort()` 那样直接改变原列表顺序。分页时应明确排序及必要的唯一排序键。
 
-参考：[Microsoft 官方说明](https://learn.microsoft.com/en-us/dotnet/api/system.linq.enumerable.orderby)。
-
 ### 99. `GroupBy()` 与 `ToLookup()` 有什么区别？
 
 **答案：**
@@ -1315,8 +1294,6 @@ var byLength = new[] { "a", "bb", "cc" }.ToLookup(s => s.Length);
 
 只需处理一轮分组结果可用 `GroupBy`；需要反复按键取组时可考虑 `ToLookup`。
 
-参考：[Microsoft 官方说明](https://learn.microsoft.com/en-us/dotnet/api/system.linq.enumerable.tolookup)。
-
 ### 100. `ToDictionary()` 遇到重复键怎么办？
 
 **答案：**
@@ -1324,8 +1301,6 @@ var byLength = new[] { "a", "bb", "cc" }.ToLookup(s => s.Length);
 `ToDictionary` 会立即构建字典；键按所选比较器判断重复时抛出异常，不会默认保留最后一个。
 
 应先定义业务规则：键本来就应唯一，则检查或暴露数据错误；允许多值用 `ToLookup`；保留首个可先分组取首个；保留最后一个可在明确循环中通过索引器覆盖。不要未经业务判断就静默丢弃重复项。
-
-参考：[ToDictionary 官方说明](https://learn.microsoft.com/en-us/dotnet/api/system.linq.enumerable.todictionary)。
 
 ### 101. `Distinct()` 如何判断重复？
 
@@ -1351,8 +1326,6 @@ var names = new[] { "Alice", "ALICE", "Bob" }
 
 例如 `A = [1, 1, 2]`、`B = [2, 3]`：连接包含五项；并集包含 1、2、3；交集包含 2；`A.Except(B)` 包含 1。集合操作仍依赖相等性规则。
 
-参考：[Microsoft 官方说明](https://learn.microsoft.com/en-us/dotnet/csharp/linq/standard-query-operators/set-operations)。
-
 ### 103. `Cast<T>()` 与 `OfType<T>()` 有什么区别？
 
 **答案：**
@@ -1367,9 +1340,7 @@ var ints = data.OfType<int>(); // 1、3
 
 `Cast<long>()` 不会自动把装箱的 `int` 做数值转换；必要时显式写出 `Select` 转换逻辑。
 
-参考：[Cast 官方说明](https://learn.microsoft.com/en-us/dotnet/api/system.linq.enumerable.cast)。
-
-### 104. `Aggregate()` 有什么用？为什么要关注种子和空序列？
+### 104. Aggregate 如何使用？
 
 **答案：**
 
@@ -1390,8 +1361,6 @@ int product = numbers.Aggregate(1, (acc, n) => acc * n); // 24
 
 需要复用当前结果时，可一次物化再读取；但要评估数据规模和内存成本，不能为所有序列无条件加 `ToList()`。真正只需单遍处理时，应直接组织一次遍历。
 
-参考：[Microsoft 官方说明](https://learn.microsoft.com/en-us/dotnet/fundamentals/code-analysis/quality-rules/ca1851)。
-
 ### 106. `Join()`、`GroupJoin()` 和左外连接如何理解？
 
 **答案：**
@@ -1400,25 +1369,21 @@ int product = numbers.Aggregate(1, (acc, n) => acc * n); // 24
 
 经典左外连接可通过分组连接，再对组使用 `DefaultIfEmpty()` 展开。这样即使没有匹配也保留外部元素，读取内部结果时必须处理默认值。不要把 `Join` 误认为按索引配对；按位置配对通常使用 `Zip`。
 
-参考：[Microsoft 官方说明](https://learn.microsoft.com/en-us/dotnet/csharp/linq/standard-query-operators/join-operations)。
-
-### 107. LINQ 一定比循环慢吗？优化时看哪些成本？
+### 107. LINQ 有哪些性能开销？如何优化？
 
 **答案：**
 
-不能一概而论，操作符、数据源类型和运行时优化都会影响结果。关注迭代器、捕获闭包、委托调用、重复枚举、排序缓冲和物化分配。
+常见开销包括迭代器、闭包与委托、重复枚举、排序／分组缓冲，以及 ToList／ToArray 的结果分配。
 
-先测量热点，再选择合适的数据结构、减少不必要的排序和物化，必要时改为循环。调整筛选与投影顺序时要保持语义，不要依赖谓词或选择器产生副作用。可读性好的普通查询无需为了假设中的性能问题全部重写。
+优化先减少重复遍历和无用排序，再根据是否需要复用结果决定物化；热点可改成明确循环并复用容器。查询复杂度、数据量和运行时都会影响结果，应以实际测量判断。
 
-### 108. `AsParallel()` 一定能加速查询吗？
+### 108. PLINQ 的原理和适用场景是什么？
 
 **答案：**
 
-`AsParallel()` 使用 PLINQ 并行处理适合拆分的数据工作，但分区、调度和合并都有成本。数据很少、每项工作很轻时可能更慢。
+AsParallel 将查询交给 PLINQ，按数据分区并行执行，再合并结果。适合数据量较大、每项计算较重且彼此独立的 CPU 工作。
 
-默认不应依赖输出顺序，需要时显式请求顺序并接受对应开销。委托应避免不受保护地访问共享可变状态或线程关联资源。CPU 密集且每项工作较独立时才值得测量；异步 I/O 也不应简单用 PLINQ 代替异步流程。
-
-参考：[Microsoft 官方说明](https://learn.microsoft.com/en-us/dotnet/standard/parallel-programming/potential-pitfalls-with-plinq)。
+分区、调度、同步和保序有成本，小数据可能更慢；委托不要无保护地修改共享状态或调用线程关联 API。异步 I/O 通常使用对应异步接口。
 
 ## 八、异步与并发
 
@@ -1535,21 +1500,13 @@ async Task ExecuteAsync()
 
 解决方法：统一锁获取顺序、缩小锁的范围、避免持锁执行耗时操作，并尽量减少嵌套锁。
 
-### 117. `volatile` 能否保证线程安全？
+### 117. volatile 的作用是什么？与 Interlocked 有什么区别？
 
 **答案：**
 
-不能。
+C# volatile 约束相关读写的可见性和重排序，用于表达某些跨线程通信。它不使 count++ 这类读—改—写复合操作整体原子。
 
-`volatile` 主要用于约束特定读写的可见性与重排序行为，不能保证 `count++` 这样的复合操作是原子的。
-
-```csharp
-volatile int count;
-
-// count++ 不是线程安全的
-```
-
-对于计数器等原子操作，应使用 `Interlocked.Increment(ref count)`；对于复杂共享状态，通常需要锁或其他同步机制。
+Interlocked 提供原子递增、交换和比较交换，适合计数器与简单状态更新；多个字段需要维持共同不变量时通常使用 lock。
 
 ### 118. 什么是原子操作？为什么 `count++` 不是原子操作？
 
@@ -1597,15 +1554,15 @@ CAS 常用于无锁算法，但复杂并发结构还要考虑内存可见性、A
 
 常见解决方法是给值增加版本号，或者采用能够识别状态变化的其他设计。
 
-### 121. `ConcurrentDictionary` 是否意味着所有操作都安全？
+### 121. ConcurrentDictionary 如何保证线程安全？复合操作怎么处理？
 
 **答案：**
 
-它保证自身公开 API 在并发访问时具有相应的线程安全语义，但不意味着外部复合逻辑自动原子化。
+ConcurrentDictionary 提供线程安全的单次字典操作，适合多线程查询和更新。需要原子添加／替换时使用 TryAdd、TryUpdate、GetOrAdd、AddOrUpdate 等接口。
 
-例如，先判断键不存在，再执行插入，是两个独立操作，可能被其他线程打断。需要时应使用 `GetOrAdd`、`AddOrUpdate` 等 API，并注意其委托可能被执行多次，不能把有副作用的操作随意放进委托。
+先 ContainsKey 再赋值仍是两个操作，期间状态可能变化。GetOrAdd／AddOrUpdate 的用户工厂可能重复执行，不能把其中副作用当成只发生一次。
 
-### 122. 什么是无锁队列？它一定比加锁队列快吗？
+### 122. 无锁队列的原理和优缺点是什么？
 
 **答案：**
 
@@ -1629,24 +1586,13 @@ await completed; // 继续等待获胜任务，观察其结果、异常或取消
 
 `WhenAny` 不会自动取消剩余任务，需要通过取消令牌或其他机制处理。
 
-### 124. `CancellationToken` 能否强制终止任务？
+### 124. CancellationToken 如何取消异步任务？
 
 **答案：**
 
-不能。它主要用于协作式取消，任务代码必须主动检查令牌或调用支持取消的 API。
+CancellationToken 是协作式取消信号。调用方发出取消请求，执行方通过传递 token、检查 IsCancellationRequested 或调用 ThrowIfCancellationRequested 响应。
 
-```csharp
-async Task WorkAsync(CancellationToken token)
-{
-    while (true)
-    {
-        token.ThrowIfCancellationRequested();
-        await DoStepAsync(token);
-    }
-}
-```
-
-如果任务忽略取消信号，它仍然可能继续运行。
+它不会强制终止任意代码。任务应在合适节点检查并清理资源；共享底层操作还需区分某个等待者取消和整个任务取消。
 
 ### 125. 为什么通常不推荐使用 `async void`？
 
@@ -1656,15 +1602,13 @@ async Task WorkAsync(CancellationToken token)
 
 一般业务异步方法应返回 `Task` 或 `Task<T>`。`async void` 主要适用于必须匹配 `void` 签名的事件处理器，并且需要明确处理异常。
 
-### 126. `ConfigureAwait(false)` 会强制切换到后台线程吗？
+### 126. ConfigureAwait(false) 有什么作用？
 
 **答案：**
 
-不会。它表示这次 `await` 不要求恢复到捕获的同步上下文或任务调度器；如果等待对象已经完成，后续代码仍可能同步地在当前线程继续。
+在相应 await 中，不要求后续代码回到捕获的同步上下文。库代码常用它减少对调用环境的依赖。
 
-与调用环境无关的库代码可以考虑使用它；需要回到特定 UI 环境的逻辑则应保留或显式恢复对应上下文。它不等于取消所有执行上下文传播，也不会自动让整个调用链都忽略上下文。
-
-参考：[Microsoft 官方说明](https://devblogs.microsoft.com/dotnet/configureawait-faq/)。
+它不强制新建线程或切到线程池，已完成的等待也可能同步继续。后续需要访问 UI／Unity 主线程对象时，必须按环境恢复到正确上下文。
 
 ### 127. 为什么 `.Result`、`.Wait()` 可能造成死锁？
 
@@ -1681,8 +1625,6 @@ async Task WorkAsync(CancellationToken token)
 `Task<T>` 是引用类型的异步结果表示，易于保存、共享和组合。`ValueTask<T>` 是值类型包装，可表示立即完成的结果，也可包装任务或可复用的异步源。
 
 高频且经常同步完成的路径可能受益，但它增加使用约束和复制成本，不能认为一定更快。通常只消费一次 `ValueTask<T>`；若要反复等待或参与基于 `Task` 的组合，可调用一次 `AsTask()` 并保存所得任务。默认优先 `Task<T>`，有测量依据再选择。
-
-参考：[Microsoft 官方说明](https://learn.microsoft.com/en-us/dotnet/api/system.threading.tasks.valuetask)。
 
 ### 129. `Thread.Sleep()` 与 `Task.Delay()` 有什么区别？
 
@@ -1718,9 +1660,7 @@ catch (Exception ex)
 
 需要跨位置保存并重新抛出异常时，可考虑 `ExceptionDispatchInfo`。
 
-参考：[Microsoft 官方说明](https://learn.microsoft.com/en-us/dotnet/standard/exceptions/best-practices-for-exceptions)。
-
-### 131. `finally` 一定会执行吗？`return` 会跳过它吗？
+### 131. finally 在什么时候执行？
 
 **答案：**
 
@@ -1745,13 +1685,13 @@ catch (IOException ex) when (ShouldRetry(ex))
 
 ## 十、设计与测试基础
 
-### 133. 里氏替换原则只是“子类能赋值给父类变量”吗？
+### 133. 什么是里氏替换原则？
 
 **答案：**
 
-不是。里氏替换原则要求：在依赖基类契约的代码中使用子类，仍保持程序期望的正确行为。语法上的可赋值只是基础。
+子类对象应能替代父类对象使用，并保持父类对调用者承诺的行为。
 
-子类不应随意加强前置条件、削弱后置条件或破坏不变量。例如基类承诺支持写入，子类却对所有写入都抛出异常，就需要重新审视抽象与接口拆分。
+子类不应加强前置条件、削弱后置条件或破坏不变量。例如父类承诺可写，子类却对所有写入都抛异常，就不满足替换原则。它强调行为契约，不只是语法上能赋值给父类引用。
 
 ### 134. Mock 与 Stub 有什么区别？
 
@@ -1773,4 +1713,23 @@ AOT 则把目标代码生成提前到运行之前，具体部署也可能混合�
 
 托管 GC 自动回收不可达对象内存，不代表文件、连接、原生句柄等都能及时释放；仍需 `IDisposable`／`using` 等明确管理资源。与 C++ 的对比见第 22 题和 [C++ 专题](C++高频题整理.md)。
 
-参考：[Microsoft：托管执行过程](https://learn.microsoft.com/en-us/dotnet/standard/managed-execution-process)。
+## 参考资料
+
+- [Microsoft 官方说明](https://learn.microsoft.com/en-us/dotnet/csharp/nullable-references)
+- [Microsoft：大对象堆](https://learn.microsoft.com/en-us/dotnet/standard/garbage-collection/large-object-heap)
+- [Microsoft 官方说明](https://learn.microsoft.com/en-us/dotnet/csharp/linq/get-started/introduction-to-linq-queries)
+- [Microsoft 官方说明](https://learn.microsoft.com/en-us/dotnet/standard/linq/deferred-execution-lazy-evaluation)
+- [Microsoft 官方说明](https://learn.microsoft.com/en-us/dotnet/api/system.linq.iqueryable-1)
+- [AsEnumerable 官方说明](https://learn.microsoft.com/en-us/dotnet/api/system.linq.enumerable.asenumerable)
+- [Microsoft 官方说明](https://learn.microsoft.com/en-us/dotnet/csharp/linq/standard-query-operators/projection-operations)
+- [Microsoft 官方说明](https://learn.microsoft.com/en-us/dotnet/api/system.linq.enumerable.singleordefault)
+- [Microsoft 官方说明](https://learn.microsoft.com/en-us/dotnet/api/system.linq.enumerable.orderby)
+- [Microsoft 官方说明](https://learn.microsoft.com/en-us/dotnet/api/system.linq.enumerable.tolookup)
+- [ToDictionary 官方说明](https://learn.microsoft.com/en-us/dotnet/api/system.linq.enumerable.todictionary)
+- [Microsoft 官方说明](https://learn.microsoft.com/en-us/dotnet/csharp/linq/standard-query-operators/set-operations)
+- [Cast 官方说明](https://learn.microsoft.com/en-us/dotnet/api/system.linq.enumerable.cast)
+- [Microsoft 官方说明](https://learn.microsoft.com/en-us/dotnet/fundamentals/code-analysis/quality-rules/ca1851)
+- [Microsoft 官方说明](https://learn.microsoft.com/en-us/dotnet/csharp/linq/standard-query-operators/join-operations)
+- [Microsoft 官方说明](https://learn.microsoft.com/en-us/dotnet/api/system.threading.tasks.valuetask)
+- [Microsoft 官方说明](https://learn.microsoft.com/en-us/dotnet/standard/exceptions/best-practices-for-exceptions)
+- [Microsoft：托管执行过程](https://learn.microsoft.com/en-us/dotnet/standard/managed-execution-process)

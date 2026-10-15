@@ -1,47 +1,36 @@
-# Unity 客户端高频面试题与答案
+# Unity 面试题与答案
 
-> Unity 生命周期、资源、渲染实践、UI、物理、动画与工程设计。历史题按标题标注；引擎与插件行为应结合项目版本。 共 86 题。
-
-本专题以概念、机制、边界和实战追问组织；示例可能省略外围业务代码。
+> 共 86 题。按主题分类，答案直接放在题目后。
 
 [返回题库总目录](面试题库总目录.md)
 
 ## 目录
 
-| 主题 | 题号 |
+| 模块 | 题号 |
 | --- | --- |
-| [一、对象、生命周期与协程](#一、对象、生命周期与协程) | 1–14 |
-| [二、物理与 UGUI 基础](#二、物理与%20UGUI%20基础) | 15–28 |
-| [三、渲染管线与图形优化](#三、渲染管线与图形优化) | 29–45 |
-| [四、资源、依赖与内容更新](#四、资源、依赖与内容更新) | 46–58 |
-| [五、性能、GC 与对象池](#五、性能、GC%20与对象池) | 59–68 |
-| [六、异步、Job System 与数据并行](#六、异步、Job%20System%20与数据并行) | 69–74 |
-| [七、架构与系统设计](#七、架构与系统设计) | 75–78 |
-| [八、脚本后端与原生交互](#八、脚本后端与原生交互) | 79–82 |
-| [九、动画、平台与旧项目维护](#九、动画、平台与旧项目维护) | 83–86 |
+| [一、对象、生命周期与协程](#%E4%B8%80%E3%80%81%E5%AF%B9%E8%B1%A1%E3%80%81%E7%94%9F%E5%91%BD%E5%91%A8%E6%9C%9F%E4%B8%8E%E5%8D%8F%E7%A8%8B) | 1–14 |
+| [二、物理与 UGUI 基础](#%E4%BA%8C%E3%80%81%E7%89%A9%E7%90%86%E4%B8%8E%20UGUI%20%E5%9F%BA%E7%A1%80) | 15–28 |
+| [三、渲染管线与图形优化](#%E4%B8%89%E3%80%81%E6%B8%B2%E6%9F%93%E7%AE%A1%E7%BA%BF%E4%B8%8E%E5%9B%BE%E5%BD%A2%E4%BC%98%E5%8C%96) | 29–45 |
+| [四、资源、依赖与内容更新](#%E5%9B%9B%E3%80%81%E8%B5%84%E6%BA%90%E3%80%81%E4%BE%9D%E8%B5%96%E4%B8%8E%E5%86%85%E5%AE%B9%E6%9B%B4%E6%96%B0) | 46–58 |
+| [五、性能、GC 与对象池](#%E4%BA%94%E3%80%81%E6%80%A7%E8%83%BD%E3%80%81GC%20%E4%B8%8E%E5%AF%B9%E8%B1%A1%E6%B1%A0) | 59–68 |
+| [六、异步、Job System 与数据并行](#%E5%85%AD%E3%80%81%E5%BC%82%E6%AD%A5%E3%80%81Job%20System%20%E4%B8%8E%E6%95%B0%E6%8D%AE%E5%B9%B6%E8%A1%8C) | 69–74 |
+| [七、架构与系统设计](#%E4%B8%83%E3%80%81%E6%9E%B6%E6%9E%84%E4%B8%8E%E7%B3%BB%E7%BB%9F%E8%AE%BE%E8%AE%A1) | 75–78 |
+| [八、脚本后端与原生交互](#%E5%85%AB%E3%80%81%E8%84%9A%E6%9C%AC%E5%90%8E%E7%AB%AF%E4%B8%8E%E5%8E%9F%E7%94%9F%E4%BA%A4%E4%BA%92) | 79–82 |
+| [九、动画、平台与旧项目维护](#%E4%B9%9D%E3%80%81%E5%8A%A8%E7%94%BB%E3%80%81%E5%B9%B3%E5%8F%B0%E4%B8%8E%E6%97%A7%E9%A1%B9%E7%9B%AE%E7%BB%B4%E6%8A%A4) | 83–86 |
 
 ## 一、对象、生命周期与协程
 
-### 1. `Awake`、`OnEnable`、`Start`、`FixedUpdate`、`Update`、`LateUpdate` 如何执行？
+### 1. Unity 生命周期函数的执行顺序和用途是什么？
 
 **答案：**
 
-可以先描述同一组件的初始化，再描述不同更新阶段，不能把它们背成每帧固定执行一次的直线序列。
+同一组件通常先 Awake 初始化，再 OnEnable，首次启用后的更新前执行一次 Start；每帧由 Update 处理普通逻辑，LateUpdate 适合相机跟随等依赖本帧更新结果的工作。
 
-| 回调 | 时机与用途 |
-| --- | --- |
-| `Awake` | 实例初始化时调用一次；常用于本对象内部状态和组件引用初始化 |
-| `OnEnable` | 对象在层级中激活且组件启用时调用；可重复发生，适合绑定启用期订阅 |
-| `Start` | 脚本首次满足启用条件后，在首次更新前调用一次 |
-| `FixedUpdate` | 按固定模拟步长调度，用于物理相关逻辑；一个渲染帧可执行零次、一次或多次 |
-| `Update` | 启用状态下每帧更新，适合输入采集和普通逻辑 |
-| `LateUpdate` | 在 Update 阶段之后更新，常用于相机跟随和后处理逻辑 |
+FixedUpdate 按固定物理步长执行，一个渲染帧可能有零次或多次，适合物理相关逻辑。OnDisable 在失活／禁用时处理相应收尾，OnDestroy 处理销毁清理。
 
-**边界：**处于激活对象上的禁用脚本也可能已执行 `Awake`；初始不激活的对象通常要等激活才初始化。固定步长不意味着在墙钟时间上总能准时执行；负载过高时还受最大时间步限制。不同对象的同名回调没有任意可依赖的顺序，运行时创建对象也不能套用“所有对象都已 Awake”的假设。
+不同对象的同名回调顺序不应默认固定；初始不激活对象和运行时新建对象要按实际激活时机理解。
 
-参考：[官方资料 1](https://docs.unity3d.com/6000.0/Documentation/Manual/execution-order.html)；[官方资料 2](https://docs.unity3d.com/ja/6000.0/ScriptReference/MonoBehaviour.Awake.html)。
-
-### 2. `SetActive(false)` 与 `enabled = false` 有什么区别？对协程和 `Invoke` 有什么影响？
+### 2. SetActive(false) 和 enabled=false 有什么区别？
 
 **答案：**
 
@@ -55,8 +44,6 @@
 
 不能把 `Invoke`／`InvokeRepeating` 当成 `Update` 或协程来推断。**失活、禁用不应作为取消预约的业务机制**，已预约的调用不能据此假定已清除；需要停止时显式 `CancelInvoke()`。如果业务要求“隐藏即暂停”，应在 `OnDisable` 取消，在 `OnEnable` 按规则重新注册。重新激活也不会自动恢复已经停止的协程执行位置。
 
-参考：[官方资料 1](https://docs.unity3d.com/6000.0/Documentation/Manual/Coroutines.html)；[官方资料 2](https://docs.unity3d.com/6000.0/Documentation/ScriptReference/MonoBehaviour.CancelInvoke.html)。
-
 ### 3. 协程有什么作用和原理？与多线程、`async/await` 有什么区别？
 
 **答案：**
@@ -68,8 +55,6 @@ Unity 协程通常由 C# 迭代器状态机和主线程调度器组成。执行�
 - **`async/await`**：组织异步操作的控制流，可等待 I/O 或任务；不自动创建线程，也不天然绑定 MonoBehaviour 生命周期。
 
 协程可以等待资源或场景异步操作，但不会把普通同步加载函数自动变成异步函数。虽然协程通常不并行执行，多个协程仍可能跨帧交错修改状态，因此仍需防止重复流程和时序冲突。
-
-参考：[官方资料 1](https://docs.unity3d.com/6000.0/Documentation/Manual/Coroutines.html)。
 
 ### 4. 常见 `yield` 写法有什么区别？
 
@@ -114,8 +99,6 @@ void OnDisable()
 
 `DontDestroyOnLoad` 用于让合适的根对象跨场景保留，不是对显式 `Destroy` 的免疫；长期存活的管理器协程更需要主动解除对旧场景的引用。
 
-参考：[官方资料 1](https://docs.unity3d.com/6000.0/Documentation/Manual/Coroutines.html)。
-
 ### 6. Prefab、Prefab Variant 与嵌套 Prefab 分别解决什么问题？
 
 **答案：**
@@ -126,19 +109,13 @@ void OnDisable()
 
 编辑器中的实例和变体可继承资源修改，但本地覆盖项可能遮住变化；运行时克隆出的对象也不是会自动同步全部配置的远程“模板订阅者”。设计时应控制变体继承深度，明确哪些字段允许覆盖，避免到处 Apply／Revert 导致误修改。
 
-参考：[官方资料 1](https://docs.unity3d.com/6000.0/Documentation/Manual/PrefabVariants.html)。
-
-### 7. `Instantiate` 为什么昂贵？如何减少集中生成造成的卡顿？
+### 7. Instantiate 做了哪些工作？如何优化大量实例化？
 
 **答案：**
 
-可以从可观察的工作理解：克隆对象及子层级、创建组件和原生／托管相关对象、复制序列化数据、建立引擎关联，并在满足激活条件时触发生命周期回调。
+Instantiate 克隆对象及子层级，创建组件、复制序列化数据，并在满足激活条件时触发 Awake、OnEnable 等回调。
 
-真正的开销还可能来自 `Awake`、`OnEnable` 中的资源查询、订阅、布局和逻辑，不只是内存分配。非激活实例不能简单套用“立即执行所有回调”的流程。
-
-优化可采用分帧预热、对象池、简化 Prefab 层级、减少初始化热点、延迟非必要组件，并分别测量加载、实例化、激活三个阶段。异步加载 Prefab 不代表实例化和激活一定没有主线程成本。
-
-参考：[官方资料 1](https://docs.unity3d.com/6000.0/Documentation/ScriptReference/Object.Instantiate.html)。
+大量生成的成本包括对象分配、组件初始化、布局和资源关联。可用对象池、分帧预热、简化 Prefab 层级、减少初始化中的重复查询；分别测量加载、实例化和激活，异步加载资源不等于实例化没有主线程成本。
 
 ### 8. `GUID`、`fileID` 与 `InstanceID` 有什么区别？
 
@@ -152,7 +129,6 @@ void OnDisable()
 
 序列化引用常由 `GUID + fileID` 表达；不能说 fileID 都“位于同一个 .meta 里”。跨场景持久对象、共享资源不会因一次场景切换就全部消失。对象身份、资源身份和业务实体 ID 应分别设计。
 
-参考：[官方资料 1](https://docs.unity3d.com/6000.0/Documentation/ScriptReference/AssetDatabase.TryGetGUIDAndLocalFileIdentifier.html)。
 
 InstanceID 不是应用可依赖的 `GUID + fileID` 哈希计算结果；运行时新建的对象也可能没有持久化资源 GUID。不要自行重建这一映射作为引擎保证。
 
@@ -163,8 +139,6 @@ InstanceID 不是应用可依赖的 `GUID + fileID` 哈希计算结果；运行�
 `UnityEngine.Object` 重载了 `==`，判空不仅涉及托管引用，也涉及对应原生对象是否仍存在。因此托管包装对象仍存在时，`obj == null` 也可能为真。
 
 `ReferenceEquals(obj, null)` 检查引用身份；`is null` 不调用重载的 `==`。`?.` 和 `??` 也不使用 Unity 的自定义相等运算符，不能直接替代引擎对象有效性检查。
-
-参考：[UnityEngine.Object 官方说明](https://docs.unity3d.com/6000.0/Documentation/ScriptReference/Object.html)。
 
 ### 10. 为什么事件订阅可能造成内存泄漏？Unity 中如何避免？
 
@@ -188,7 +162,7 @@ void OnDisable()
 
 重点检查静态事件、全局事件总线和对象池中的重复订阅。订阅者销毁或不再需要事件时，应根据实际生命周期解除订阅。
 
-### 11. Transform 的继承关系与本地／世界变换如何理解？
+### 11. Transform 的本地坐标和世界坐标有什么区别？如何旋转物体？
 
 **答案：**
 
@@ -240,7 +214,6 @@ PlayerPrefs.Save(); // 在合适的保存节点调用
 
 移动运动学刚体时可在固定更新阶段使用合适的刚体移动 API。复合 Collider 的刚体可能在父级，不应只检查碰撞体所在节点。
 
-参考：[官方资料 1](https://docs.unity3d.com/6000.0/Documentation/Manual/collider-types-interaction.html)。
 
 接触过程常对应 `OnCollisionEnter/Stay/Exit`，触发重叠对应 `OnTriggerEnter/Stay/Exit`；对象销毁、失活等情况下不能把 Exit 回调当作唯一清理入口。Trigger 仍参与物理系统的重叠检测，不是被物理系统完全忽略。
 
@@ -259,8 +232,6 @@ PlayerPrefs.Save(); // 在合适的保存节点调用
 
 直接每帧修改 Transform 绕过物理运动，也可能破坏预期的检测过程。CCD 不是对所有几何与所有运动都绝对不漏的保证。
 
-参考：[官方资料 1](https://docs.unity3d.com/6000.0/Documentation/Manual/ContinuousCollisionDetection.html)。
-
 ### 17. UGUI 的 Anchor 与 Pivot 有什么区别？如何适配屏幕？
 
 **答案：**
@@ -276,9 +247,7 @@ Anchor 是相对父 RectTransform 的归一化参考点或区域，决定定位�
 
 Canvas Scaler 不能自动解决所有布局问题；自适应也不意味着在不同宽高比下简单等比例放大所有元素。
 
-参考：[官方资料 1](https://docs.unity3d.com/Packages/com.unity.ugui@2.0/manual/UIBasicLayout.html)。
-
-### 18. Canvas 三种渲染模式如何选择？拆 Canvas 和射线检测如何优化？
+### 18. Canvas 有哪些渲染模式？如何优化 UGUI？
 
 **答案：**
 
@@ -291,8 +260,6 @@ Canvas Scaler 不能自动解决所有布局问题；自适应也不意味着在
 没有“某模式永远最快”的结论。Canvas 中部分内容频繁变化时，可按更新频率和层级拆分动态区与静态区，缩小重建范围；但过度拆分会增加 Canvas 和批次成本，也不能消除透明像素叠加造成的 Overdraw。
 
 UGUI 通过 EventSystem、输入模块和 GraphicRaycaster 找出候选 Graphic，并结合排序、遮挡与过滤规则确定命中。关闭非交互图像的 `raycastTarget`，只在需要交互的 Canvas 放置 GraphicRaycaster，避免不必要的物理阻挡检测和复杂 Layout 重建。
-
-参考：[官方资料 1](https://unity.com/how-to/unity-ui-optimization-tips)。
 
 ### 19. CharacterController 与 Rigidbody 有什么区别？
 
@@ -317,23 +284,23 @@ Rigidbody 用于物理模拟，可受力、重力与碰撞冲量驱动。选择�
 
 `AddForceAtPosition` 还可能因作用点偏离质心产生力矩；转动可使用 `AddTorque`。连续施力通常在固定更新中安排，不要再盲目乘一次 `deltaTime`；公式未计入阻力、约束等后续模拟影响。
 
-### 21. HingeJoint 是链条距离约束吗？
+### 21. HingeJoint 是什么？有什么用途？
 
 **答案：**
 
-HingeJoint 是铰链关节，主要允许物体围绕指定轴旋转，适合门、摆臂和链条中的单个连接点，可设置弹簧、马达和角度限制。
+HingeJoint 是铰链关节，将物体约束为围绕指定轴旋转，常用于门、摆臂和链条连接。
 
-“自由移动到固定距离才产生拉力”不是 HingeJoint 的通用定义。距离、弹性或更复杂的自由度限制应根据需求选择 SpringJoint、ConfigurableJoint 等。链条通常由多个刚体和关节组成，还需控制质量比、迭代精度与性能。
+它可设置角度限制、马达和弹簧。需要“保持最大距离”的绳索／拉力效果时，应选择相应距离／弹簧约束，而不是把铰链当作自由距离约束。
 
-### 22. Physics.Raycast 是真的发射物体吗？如何选择查询 API？
+### 22. Physics.Raycast 的原理和用法是什么？
 
 **答案：**
 
-Raycast 是沿原点、方向和长度进行空间查询，不会创建一个飞行实体。`Raycast` 通常取最近命中，`RaycastAll` 取得多个命中但不保证排序；NonAlloc 版本可复用结果缓冲，要处理容量不足。
+Raycast 用原点、方向和最大距离描述射线，与物理世界中的碰撞体做求交，返回命中信息；不会真的生成一个运动物体。
 
-正确设置 `maxDistance`、LayerMask 和 Trigger 查询策略。屏幕点击可先由相机生成射线；有体积的运动检测可能需要 SphereCast 或 CapsuleCast。射线与线段／AABB 的数学原理见 [图形学与3D数学题库](图形学与3D数学题库.md)。
+设置 LayerMask 和 Trigger 查询策略可排除无关对象；只需最近命中用普通接口，多命中用相应查询，热点中可考虑 NonAlloc 版本。较粗的移动物体可用 SphereCast／CapsuleCast 等形状扫掠。
 
-### 23. Unity 如何做 2D？IMGUI、UGUI 与 UI Toolkit 如何分工？
+### 23. Unity 怎么制作 2D 游戏？常用 UI 系统有哪些？
 
 **答案：**
 
@@ -349,7 +316,7 @@ IMGUI 使用 `OnGUI` 等即时模式，适合部分调试和编辑器工具；�
 
 动态字体不天然在所有 Unicode 场景都更好。规划常用字预热、fallback、图集容量、字体授权与文本刷新频率，避免聊天文本或语言切换引发集中开销。
 
-### 25. UGUI 从数据变化到渲染大致经历什么？为什么同材质仍不能合批？
+### 25. UGUI 的渲染和合批流程是什么？
 
 **答案：**
 
@@ -383,19 +350,13 @@ IMGUI 使用 `OnGUI` 等即时模式，适合部分调试和编辑器工具；�
 
 ## 三、渲染管线与图形优化
 
-### 29. Material 与 Shader 有什么关系？如何实现纯色或自发光？
+### 29. Material 和 Shader 有什么关系？如何实现纯色自发光？
 
 **答案：**
 
-Shader 定义 GPU 使用的着色程序与相关渲染配置；Material 引用 Shader，并保存纹理、颜色、数值、关键字等参数。多个材质可以使用同一 Shader。
+Shader 定义着色程序和渲染方式，Material 引用 Shader 并保存纹理、颜色等参数；多个材质可使用同一 Shader。
 
-Standard Shader 是 **Built-in 管线**的常见 PBR Shader；URP／HDRP 应选择对应的 Lit 或 Unlit，不是直接通用替换。
-
-- 只需要不受光照影响的纯色：选择对应管线的 Unlit 材质，设置颜色并赋给 Renderer。
-- 需要发光表面：使用支持 Emission 的材质并设置 HDR 发光颜色与强度。
-- 需要视觉光晕：还需合适的曝光和 Bloom；只勾选 Emission 不保证出现光晕，也不等于一定照亮周围物体。
-
-发光参与烘焙或实时 GI 的方式取决于管线和配置。
+不受光照影响的纯色可用对应管线的 Unlit 材质。需要发光表面则启用 Emission，设置 HDR 发光颜色和强度；视觉光晕还需 Bloom。Built-in 的 Standard 与 URP／HDRP 的 Lit 属于不同管线配置。
 
 ### 30. BIRP、URP 与 HDRP 有何核心差异？URP 为什么常用于移动端？
 
@@ -411,40 +372,28 @@ URP 的价值在于可缩放的功能与预算控制，不是“名字里有 Uni
 
 三者是选型关系，不是 BIRP → URP → HDRP 的必然升级路径。迁移需检查 Shader、材质、后处理与插件兼容性。
 
-参考：[官方资料 1](https://docs.unity3d.com/6000.0/Documentation/Manual/render-pipelines-overview.html)。
-
-### 31. SRP 给开发者什么控制权？为什么影响性能与画面？
+### 31. SRP 是什么？能控制哪些渲染流程？
 
 **答案：**
 
-SRP 通过 C# API 允许开发者组织渲染命令：决定相机如何执行剔除、筛选和排序对象、安排绘制 Pass、设置渲染目标与处理后期效果。URP 和 HDRP 是基于 SRP 的具体实现。
+SRP 通过 C# 接口组织渲染过程，包括相机剔除、对象筛选排序、Pass、目标附件、阴影和后处理。URP、HDRP 是基于 SRP 的具体实现。
 
-它能改变光照方案、深度预通道、阴影、后处理和中间纹理生命周期，因此同时影响画面、CPU 提交成本、GPU 工作量与显存带宽。
+自定义 SRP 或扩展现有管线可以改变画面方案和资源成本，例如增加特定对象 Pass、修改中间纹理生命周期。选择扩展方式时需对应项目管线和版本。
 
-开放的是渲染流程的组织能力，不是任意改写 GPU 硬件或所有引擎内部逻辑。定制 Pass 也有维护、资源读写和同步成本；新旧 URP 的 Renderer Feature／RenderGraph 扩展方式应按版本选用。
-
-参考：[官方资料 1](https://docs.unity3d.com/es/2021.1/Manual/scriptable-render-pipeline-introduction.html)。
-
-### 32. Static Batching、Dynamic Batching、GPU Instancing 与 SRP Batcher 有什么区别？
+### 32. 静态合批、动态合批、GPU Instancing 和 SRP Batcher 有什么区别？
 
 **答案：**
 
-“Batch”通常指一批提交或处理，并不是一种独立且唯一的技术。
-
-| 技术 | 核心方式 | 适用条件与成本 |
+| 技术 | 原理 | 主要成本／条件 |
 | --- | --- | --- |
-| 静态合批 | 组合适合一起绘制的静态几何数据 | 减少部分提交／状态开销，增加几何数据内存；需满足材质、Renderer 等兼容条件 |
-| 动态合批 | CPU 变换和汇集足够小的网格 | 受顶点属性、材质、Pass、变换等条件限制；CPU 成本可能超过收益 |
-| GPU Instancing | 同类网格和材质按实例数据绘制多份 | 适合同形植被、重复道具；Shader 需支持相应实例数据 |
-| SRP Batcher | 减少兼容 Shader 变体之间的材质／状态准备工作 | 重点降低 CPU 提交成本，不等于把多个 Draw Call 变成一个 |
+| 静态合批 | 组合可一起绘制的静态几何 | 增加几何存储，需兼容材质与状态 |
+| 动态合批 | CPU 汇集小网格数据 | 顶点／属性等受限，CPU 处理有成本 |
+| GPU Instancing | 同网格与材质按实例数据绘制多份 | Shader 支持实例数据，适合重复物体 |
+| SRP Batcher | 优化兼容变体的材质／状态准备 | 主要降低 CPU 提交成本，不等于一个 Draw Call |
 
-同场景可以使用多种技术，但同一 Renderer 的同一次绘制通常按兼容性与优先级选择，不能把收益机械相加。传统路径中静态合批、SRP Batcher、Instancing、动态合批有相应互斥或优先关系；Unity 6 的 GPU Resident Drawer／BRG 又有额外规则。
+用 Frame Debugger 查看未合批原因。材质、Pass、排序和变换等均可能影响兼容性；不要把所有缩放不一致都概括成动态合批必然失效。
 
-**纠错：**“缩放不同就一定不能动态合批”不成立。正负缩放造成的镜像差异是典型限制；还需查看网格属性数量等真实条件。HDRP 不支持传统动态合批。用 Frame Debugger 查看具体未合批原因。
-
-参考：[官方资料 1](https://docs.unity3d.com/cn/2023.1/Manual/DrawCallBatching.html)；[官方资料 2](https://docs.unity3d.com/cn/2023.1/Manual/SRPBatcher.html)。
-
-### 33. 什么是 Draw Call？如何优化而不牺牲整体性能？
+### 33. 什么是 Draw Call？如何降低 Draw Call？
 
 **答案：**
 
@@ -455,8 +404,6 @@ Draw Call 是绘制命令，不是固定“一物体一次”。同一物体可�
 合并 Mesh 会改变剔除粒度并可能增加无效绘制；同图集也不保证 UI 一次绘完，遮罩、排序、材质和 Canvas 都可能打断合批。Occlusion Culling 需要相应场景、烘焙／运行时配置，不是给任意物体加一个万能组件。
 
 Draw Call 太多常增加 CPU 提交成本；GPU 是否繁忙还取决于三角形、像素、着色器、带宽等。以帧时间为目标，不只追求统计数字更小。
-
-参考：[官方资料 1](https://docs.unity3d.com/cn/2023.1/Manual/optimizing-draw-calls.html)。
 
 ### 34. 什么是 Shader Variant？如何通过 keyword、strip 和 Warmup 优化？
 
@@ -470,9 +417,7 @@ Variant 是同一 Shader 在不同关键字、Pass、平台等条件下的程序
 
 过度剥离会导致缺失效果；一次性预热全部变体也可能造成长加载和内存峰值。不同图形 API 还涉及管线状态准备，不能把 Warmup 视为绝对消除全部首次绘制抖动的保证。
 
-参考：[官方资料 1](https://docs.unity3d.com/6000.0/Documentation/Manual/shader-variants.html)；[官方资料 2](https://docs.unity3d.com/6000.0/Documentation/Manual/shader-loading.html)。
-
-### 35. 修改 Material 为什么可能抖动？`material`、`sharedMaterial` 与 MPB 如何选择？
+### 35. material、sharedMaterial 和 MaterialPropertyBlock 有什么区别？
 
 **答案：**
 
@@ -485,8 +430,6 @@ Variant 是同一 Shader 在不同关键字、Pass、平台等条件下的程序
 
 材质实例还涉及原生内存；托管 GC 不等于及时释放原生 Material。不同材质也不必然破坏 SRP Batcher，关键是兼容 Shader 变体和数据布局。
 
-参考：[官方资料 1](https://docs.unity3d.com/6000.0/Documentation/ScriptReference/Renderer-material.html)；[官方资料 2](https://docs.unity3d.com/cn/2023.1/Manual/SRPBatcher.html)。
-
 ### 36. 实时阴影如何实现？Shadow Map 的成本和优化点是什么？
 
 **答案：**
@@ -498,8 +441,6 @@ Variant 是同一 Shader 在不同关键字、Pass、平台等条件下的程序
 可减少实时投影灯光、缩短阴影距离、调整分辨率与级联、限制投射层和远处投影对象、使用简化投影网格，并对稳定内容采用烘焙或混合方案。
 
 Bias 过小易出现自阴影痤疮，过大可能悬浮或漏光；必须结合尺度和光源调整。不能只降低阴影分辨率而忽略重复绘制和过滤开销。
-
-参考：[官方资料 1](https://docs.unity3d.com/6000.0/Documentation/Manual/shadow-mapping.html)。
 
 ### 37. 如何判断 CPU Bound 或 GPU Bound？Profiler、Frame Debugger、RenderDoc 如何分工？
 
@@ -528,55 +469,55 @@ Bias 过小易出现自阴影痤疮，过大可能悬浮或漏光；必须结合
 
 Lightmap 将预计算的光照等结果存入纹理，适合相对稳定的表面；移动对象可通过适合的探针方案获得间接光照信息。点光源启用实时阴影时可能涉及多个方向的阴影渲染，成本还取决于分辨率、范围、物体数量和具体实现。
 
-### 39. 多个相机同时活动时会怎样？Depth Only 是透明背景吗？
+### 39. 多个 Camera 同时活动会怎样？Depth Only 有什么作用？
 
 **答案：**
 
-多个相机可能分别向同一目标、不同 RenderTexture 或不同显示器输出，最终效果由顺序、视口、目标与清除规则决定，不一定只是“画面混合”。
+活动相机按管线支持的顺序／堆叠规则渲染到目标，多个全屏相机会增加绘制成本；显示内容还取决于清除设置、目标纹理和 viewport。
 
-Built-in 的 Depth Only 主要清除深度而保留之前的颜色，常用于叠加相机；它不是自动让输出背景具有透明 alpha。URP 的 Base／Overlay Camera Stack 等有自己的兼容规则，应按当前管线组织。多相机也可能重复剔除、绘制、阴影和后处理。
+Built-in 的 Depth Only 清深度而保留已有颜色，可让后续相机叠加绘制，例如单独画武器。它不是把背景变成透明；URP 使用对应相机堆叠和清除机制。
 
-### 40. OnBecameVisible／OnBecameInvisible 能当成玩家可见性判断吗？
-
-**答案：**
-
-这组回调反映 Renderer 对相关相机的可见状态变化，不等同于“玩家肉眼当前看见”。Editor 的 Scene 视图相机等也可能影响结果。
-
-可用于部分表现层降频，但关键游戏逻辑不能只依赖它。需要特定相机的可见性、遮挡、屏幕范围或 AI 感知时，应使用对应的剔除与查询策略；回调也不是任意业务初始化与清理的唯一入口。
-
-### 41. 把 GameObject 标成 Static 会发生什么？
+### 40. OnBecameVisible 和 OnBecameInvisible 何时触发？
 
 **答案：**
 
-Static 是一组供不同系统使用的静态标记，如批处理、光照或遮挡相关配置，具体选项随版本变化。它不是一个自动隐藏所有被遮挡物体的开关，也不应对所有“不常移动”的对象一键全选。
+当 Renderer 变为对相机可见或不再可见时触发，可用于暂停某些离屏表现或统计。
 
-按系统实际需要设置，明确对象或层级是否会改变。静态合批、遮挡数据、烘焙光照各自有约束；业务后来移动对象时应重新评估这些假设。
+可见性不是仅针对玩家主相机：编辑器 Scene 相机等也可能参与。因此判断“玩家是否看见目标”时，应使用指定相机的视锥／遮挡或业务逻辑，而不是只依赖这对回调。
 
-### 42. Texture 与 Sprite 导入有什么区别？Sprite 必须是 2 的整数次幂吗？
-
-**答案：**
-
-Texture2D 保存纹理数据；Sprite 还描述纹理区域、Pivot、边框、网格等 2D 渲染信息。Sprite 导入模式可生成一个或多个 Sprite 子资源，用于 SpriteRenderer、UI Image 等。
-
-Sprite 源图不普遍要求宽高为 2 的整数次幂。实际限制来自目标压缩格式、硬件、MipMap、图集与导入配置。图集能改善纹理共享，但不保证所有使用者合成一次绘制。
-
-### 43. Terrain 使用 3、4、5 个地表纹理层，开销一样吗？
+### 41. 将 GameObject 设置为 Static 有什么作用？
 
 **答案：**
 
-不能给出跨版本固定答案。每个 Pass 可处理的层数、额外 Pass、控制纹理、法线采样和远景合成策略取决于 Terrain Shader、管线与平台。
+Static 标记告诉相应系统对象可按静态方式处理，例如静态合批、遮挡数据或光照相关处理；具体由所选 Static Flags 决定。
 
-新增一层可能跨过单 Pass 容量而产生明显成本，也可能主要增加采样或资源占用。用 Frame Debugger 观察 Pass 与状态，用 GPU 时间和内存分析实际变化，不背“无论几层都只渲染一次”。
+它不是冻结 Transform 的总开关，也不是一勾就自动应用所有优化。准备运行时移动的物体，不应错误参与依赖固定位置的静态数据。
 
-### 44. 如何保证 A 组先于 B 组绘制？绘制顺序等于最终遮挡关系吗？
+### 42. Texture 和 Sprite 导入有什么区别？
 
 **答案：**
 
-先明确相同相机、相同目标还是跨相机。可按需求使用渲染队列、Sorting Layer／Order、相机叠加，或显式渲染 Pass。常见队列中较小值先处理，但同队列内部还可能按深度等排序。
+Texture 导入关注纹理格式、尺寸、Mip、sRGB、压缩和可读性；Sprite 还带有 2D 使用所需的矩形、Pivot、切片、边界、网格等信息，并可进入 Sprite Atlas。
 
-绘制先后不等于最终覆盖关系：深度测试、深度写入、混合和模板测试都会影响结果。要保证特定效果，应同时定义这些状态；不要沿用“队列值越大越先画”的错误结论。
+Sprite 不要求一律是 2 的幂尺寸，但目标平台压缩、Mip 和图集可能有尺寸／块对齐要求。按实际用途设置，而非为了统一格式随意缩放 UI 图片。
 
-### 45. Surface Shader、顶点片段 Shader 与 Shader Graph 如何选择？
+### 43. Terrain 使用 3、4、5 个地表纹理层时，开销有什么区别？
+
+**答案：**
+
+地表每增加一层，通常增加纹理采样和混合工作；当层数超过当前 Terrain Shader 每 Pass 能处理的数量时，还可能增加额外 Pass。
+
+例如按四层一组的实现中，3、4 层通常处于同一组，5 层可能需要下一组处理。实际分组和高度混合等特性依渲染管线／Shader，用 Frame Debugger 查看 Pass 和采样成本。
+
+### 44. 如何保证 A 组物体先于 B 组绘制？
+
+**答案：**
+
+可通过渲染队列、排序层／顺序、自定义 Pass 或相机顺序组织绘制；具体入口依 Renderer 类型和管线而定。
+
+先绘制不等于最终一定被后绘制覆盖。深度测试和深度写入仍决定遮挡，若目标是永远置顶，还需配置相应深度与混合状态。
+
+### 45. Surface Shader、顶点片元 Shader 和 Shader Graph 有什么区别？
 
 **答案：**
 
@@ -596,8 +537,6 @@ ScriptableObject 是不依附 GameObject 的 Unity 对象，适合共享配置�
 
 配置可用 ScriptableObject，也可用表格导出的结构化数据，取决于规模和协作方式。应将共享配置与玩家、角色、Buff 的可变状态分开，避免运行时改动共享配置影响所有使用者；在 Player 中修改资产对象不等于自动保存到磁盘。
 
-参考：[官方资料 1](https://docs.unity3d.com/6000.0/Documentation/Manual/class-ScriptableObject.html)。
-
 ### 47. AssetBundle 是什么？从资源发布到加载的流程是什么？
 
 **答案：**
@@ -607,8 +546,6 @@ AssetBundle 是面向目标平台生成的资源容器，可包含序列化对�
 基本流程：规划资源分组与依赖 → 为目标平台产出 Bundle 和清单 → 发布带版本／哈希的文件 → 客户端校验并下载 → 先准备依赖 → 通过本地或网络加载接口读取 Bundle → 取得目标资源 → 按所有权释放。
 
 本地可使用 `LoadFromFileAsync`，网络可使用 `UnityWebRequestAssetBundle`。资源发布流程可由 `BuildPipeline.BuildAssetBundles` 等编辑器 API 或上层系统组织。实际加载还需处理缓存、失败重试、峰值内存与卸载，不应只展示 `LoadAsset` 一步。
-
-参考：[官方资料 1](https://docs.unity3d.com/6000.0/Documentation/Manual/AssetBundles-Dependencies.html)。
 
 ### 48. AssetBundle 的 Manifest、依赖加载与重复加载如何管理？
 
@@ -622,8 +559,6 @@ AssetBundle 是面向目标平台生成的资源容器，可包含序列化对�
 4. 释放目标及依赖时逐级减引用，只有不再被其他使用者需要时才卸载。
 
 AssetBundle 底层 API 不会替你完成整套依赖生命周期管理。同一资源打入多个 Bundle 可能产生重复资源；反复 `Unload(false)` 后重新加载也可能增加重复实例。循环依赖首先是分组与卸载粒度问题，不能仅凭存在环就断言必定泄漏。
-
-参考：[官方资料 1](https://docs.unity3d.com/6000.0/Documentation/Manual/AssetBundles-Dependencies.html)。
 
 ### 49. 如何管理资源引用计数？Resources 与 AssetBundle 如何卸载？
 
@@ -640,8 +575,6 @@ AssetBundle 底层 API 不会替你完成整套依赖生命周期管理。同一
 
 `Resources.UnloadUnusedAssets` 是有成本的扫描操作，也不能替代应用自己的资源所有权设计。池中对象、静态缓存和其他资源引用都可能让资源继续存活。
 
-参考：[官方资料 1](https://docs.unity3d.com/6000.0/Documentation/ScriptReference/AssetBundle.Unload.html)。
-
 ### 50. `Destroy` 与 `DestroyImmediate` 有什么区别？
 
 **答案：**
@@ -652,7 +585,7 @@ AssetBundle 底层 API 不会替你完成整套依赖生命周期管理。同一
 
 资源应按其来源释放：Addressables 实例优先配对 `ReleaseInstance`，临时 RenderTexture 配对归还；不能把 `Destroy` 当作能平衡所有资源系统计数的万能接口。
 
-### 51. Addressables 的 Handle、引用计数和依赖管理是什么？Release 有什么危险？
+### 51. Addressables 如何管理资源和依赖？
 
 **答案：**
 
@@ -664,8 +597,6 @@ Addressables 加载返回 `AsyncOperationHandle`，用于观察状态、结果�
 - 失败、取消等待、窗口关闭和场景切换也需要完成所有权收尾，不能只在成功路径 Release。
 
 过早释放可能卸载仍在使用的资源；重复释放会破坏计数。计数归零也不等于进程内存立即下降，还受 Bundle 共驻、缓存等影响。频繁归零又重新加载会产生资源抖动。
-
-参考：[官方资料 1](https://docs.unity3d.com/Packages/com.unity.addressables@1.21/manual/MemoryManagement.html)；[官方资料 2](https://docs.unity3d.com/Packages/com.unity.addressables@1.21/manual/AddressableAssetsAsyncOperationHandle.html)。
 
 ### 52. 资源热更新与 Lua／C# 逻辑热更新有什么区别？完整更新流程如何设计？
 
@@ -744,9 +675,7 @@ Library 通常可由项目输入重新生成，但重建有时间成本；备份
 
 Addressables 不是 AssetBundle 换名字后的新版本，也没有普遍取消底层 AssetBundle API。资源是否进入 Player、Bundle 或其他交付内容，取决于实际依赖和配置，不能只看是否在 Assets 下。
 
-参考：[运行时资源加载](https://docs.unity3d.com/6000.0/Documentation/Manual/LoadingResourcesatRuntime.html)、[Addressables 概览](https://docs.unity3d.com/Packages/com.unity.addressables@1.21/manual/AddressableAssetsOverview.html)。
-
-### 58. AssetBundle 如何分组？包越小越好吗？
+### 58. AssetBundle 如何分组？
 
 **答案：**
 
@@ -758,17 +687,13 @@ Addressables 不是 AssetBundle 换名字后的新版本，也没有普遍取消
 
 ## 五、性能、GC 与对象池
 
-### 59. Unity 是否按 Gen 0／1／2 回收？Mono 与 IL2CPP 的 GC 有何关系？
+### 59. Unity 的垃圾回收机制是什么？Mono 和 IL2CPP 有什么区别？
 
 **答案：**
 
-不能把桌面 .NET 的分代模型直接当作 Unity 结论。这里以 Unity 2022.3／6000.0 常见 Mono、IL2CPP 环境为范围：相关官方资料描述的是 Boehm 系列的**非分代、非压缩**回收器，而不是按 Gen 0／1／2 晋升的通用答案。
+Unity 用托管 GC 回收不再可达的托管对象；常见 Unity GC 配置与普通现代 .NET 的 Gen 0／1／2 分代策略不同，应按所用 Unity 版本确认。
 
-**增量 GC**把工作分散到多个时间片，降低单次长暂停的风险；它不等于分代，也不等于总回收工作消失。引用变化需要额外追踪，工作量大时仍可能出现明显回收成本。平台支持也有差异。
-
-IL2CPP 改变代码的生成与执行方式，不会让托管分配自动变为手工释放，也不会消除 GC。回答时应先明确 Unity 版本、后端和平台，再讨论其实际 GC 配置。
-
-参考：[官方资料 1](https://docs.unity3d.com/ru/2021.1/Manual/BestPracticeUnderstandingPerformanceInUnity4-1.html)；[官方资料 2](https://docs.unity3d.com/6000.0/Documentation/Manual/performance-incremental-garbage-collection.html)。
+Mono 和 IL2CPP 是脚本执行后端，换成 IL2CPP 不意味着不再有托管分配和 GC。Incremental GC 将部分回收工作分摊到多帧，减轻单次停顿，但不会自动减少总分配量。
 
 ### 60. 如何定位 `Update()` 中的 GC Alloc？LINQ 有哪些风险？
 
@@ -779,8 +704,6 @@ GC Alloc 是托管分配量，不是本帧已经回收的字节数。先在目�
 LINQ 的部分操作会创建迭代器、委托或物化结果；重复枚举还可能重复计算。不能断言所有 LINQ 都分配，也不能只看一行语法决定优化。
 
 处理流程：记录基线 → 定位具体方法 → 复用缓存或预留容量 → 避免重复查询和临时对象 → 必要时用清晰循环替代 → 复测分配量与帧时间。Profiler 的 Deep Profile 等设置也会改变开销，需要区分定位工具本身的影响。
-
-参考：[官方资料 1](https://docs.unity3d.com/6000.0/Documentation/Manual/performance-garbage-collector.html)。
 
 ### 61. 如何定位内存泄漏？怎样区分泄漏、缓存与内存峰值？
 
@@ -794,15 +717,15 @@ LINQ 的部分操作会创建迭代器、委托或物化结果；重复枚举还
 
 托管堆容量或进程保留内存不下降，不能单独证明对象仍存活。要展示“哪些对象反复增加、由谁持有、何时本应释放”的证据。
 
-### 62. 为什么托管包装对象被回收，不代表 Unity 原生资源已及时释放？
+### 62. Unity 托管对象和原生资源如何释放？
 
 **答案：**
 
-纹理、网格、RenderTexture 等资源可能同时涉及托管包装器和原生侧内存。GC 管理托管可达性，不能替代资源所有权及引擎资源的释放流程。
+UnityEngine.Object 通常包含 C# 包装对象与引擎原生对象。GC 管托管可达性，原生对象与资源还有自己的生命周期。
 
-应根据资源创建方式使用对应的销毁、释放或归还机制，并检查资源是否仍被场景对象、缓存或对象池引用。分析 GC Roots、分代回收和 LOH 时，也不能直接将桌面 .NET 的全部实现细节套用到不同 Unity 版本、后端和平台。
+运行时实例按需要 Destroy；Resources、AssetBundle、Addressables 按各自加载／引用接口释放。仅让 C# 引用变成 null 不等于立刻释放全部纹理、Mesh 或依赖资源，应解除业务持有并调用匹配的释放路径。
 
-### 63. 为什么大量零散 `Update()` 需要治理？有哪些替代方案？
+### 63. 大量 Update 如何优化？
 
 **答案：**
 
@@ -924,55 +847,33 @@ public sealed class SimpleGameObjectPool : IDisposable
 
 `reset` 回调负责业务状态清理。`Dispose()` 会销毁包括在用对象在内的全部已登记实例，因此只在确定池的作用域结束后调用。该示例不处理异步资源加载和在用总量上限；若池依赖 Addressables 加载的 Prefab，仍要持有资源租约直到所有实例结束使用。
 
-### 67. 为什么不应在热点中无节制调用 `GetComponent<T>()`？
+### 67. 频繁 GetComponent 有什么开销？怎么优化？
 
 **答案：**
 
-组件查询需要执行查找工作。在高频路径中反复查询同一个稳定组件，会增加不必要的 CPU 开销。
+GetComponent 需要查找组件。单次通常可接受，但大量对象每帧重复查询会累积成本。
 
-```csharp
-private Rigidbody _rigidbody;
+可在 Awake／初始化时缓存长期使用的组件引用，初始化参数直接传入依赖，或集中管理批量更新。组件可能被替换或销毁时要更新缓存，避免持有失效引用。
 
-void Awake()
-{
-    _rigidbody = GetComponent<Rigidbody>();
-}
-```
-
-对于生命周期内不变的组件，可在初始化时缓存。是否值得优化应依据调用频率和 Profiler 结果，不必盲目缓存所有查询；组件发生变更时，也要维护缓存的有效性。
-
-### 68. 移动端是否能照搬固定的内存、顶点、骨骼或灯光上限？
+### 68. Unity 移动端常见性能优化有哪些？
 
 **答案：**
 
-不能。设备档位、目标帧率、分辨率、管线和场景决定预算；“200 MB、8 万顶点、30 根骨骼”等旧项目数字不是行业通用阈值。
+CPU 侧减少重复脚本工作、资源查询和提交，使用合适的合批／实例化；GPU 侧控制透明覆盖、材质采样、灯光阴影和后处理，使用 LOD 与剔除。
 
-分别测量 CPU、GPU、托管／原生／图形内存、加载峰值和发热降频。根据瓶颈制定纹理压缩与分辨率、骨骼与蒙皮、粒子、光照、UI 和资源生命周期预算，并通过自动检查与真机回归维护。
+内存侧压缩并按需加载纹理／音频，减少每帧托管分配，管理资源释放和对象池容量。动画可降更新频率或设置 culling。
 
-隐藏对象或放入对象池会保留内存，不是释放内存；减面也不一定能解决像素填充受限。
+在目标设备持续运行测量帧时间、内存和温度，再确定预算；不直接照搬固定顶点数、骨骼数或内存上限。
 
 ## 六、异步、Job System 与数据并行
 
-### 69. 为什么不能在子线程随意操作 `GameObject` 或 `Transform`？
+### 69. Unity 支持多线程吗？使用时要注意什么？
 
 **答案：**
 
-Unity 大部分引擎对象 API 要求在主线程访问。在线程池中直接操作它们可能产生异常或未定义行为。
+支持，可把纯数据计算、解析等放到工作线程；大多数 GameObject、Transform 和引擎对象操作仍要求主线程，受支持的 Job 接口另按其规则使用。
 
-推荐流程：
-
-1. 后台执行纯计算、支持后台执行的文件 I/O 或数据解析。
-2. 将结果传回主线程。
-3. 在主线程更新 `Transform`、`GameObject` 和 UI。
-
-```csharp
-Vector3 result = await Task.Run(() => CalculatePosition());
-
-// 前提：此 await 已恢复到 Unity 主线程，且目标对象仍有效
-transform.position = result;
-```
-
-`Task.Run()` 的委托通常在线程池执行，但 `await` 后是否回到主线程取决于上下文和等待器。若未捕获主线程上下文，或方法从后台线程开始执行，需要显式调度回主线程。
+后台线程处理纯数据，完成后通过任务队列或主线程调度应用结果。共享状态要同步，退出时取消任务，避免异步结果访问已销毁的对象。
 
 ### 70. Unity 中如何设计一个线程安全的资源加载流程？
 
@@ -1015,8 +916,6 @@ Unity 的 Task 与 `Awaitable` 有不同恢复语义。Unity 6 的 Awaitable 使
 
 定位时记录操作 ID、起止状态、线程、取消原因和异常，给外部操作设置合理超时，并确保超时后仍处理最终资源归属。
 
-参考：[官方资料 1](https://docs.unity3d.com/6000.0/Documentation/Manual/async-await-support.html)；[官方资料 2](https://docs.unity3d.com/cn/6000.0/Manual/async-awaitable-continuations.html)。
-
 ### 73. Job System 与 Burst 分别做什么？NativeContainer 有哪些约束？
 
 **答案：**
@@ -1029,20 +928,13 @@ NativeContainer 持有原生内存，复制容器结构体通常仍指向同一�
 
 普通 Job 不能随意调用 GameObject API；先处理数据，再在允许的线程应用结果。
 
-参考：[官方资料 1](https://docs.unity3d.com/Packages/com.unity.burst@1.8/manual/index.html)；[官方资料 2](https://docs.unity3d.com/6000.0/Documentation/Manual/job-system-native-container.html)。
-
-### 74. 高性能 AOI 系统选择 Job + NativeContainer，还是 DOTS ECS？
+### 74. 如何设计高性能 AOI 系统？
 
 **答案：**
 
-这不是完全互斥的选项：DOTS ECS 也常配合 Jobs、Burst 和原生数据。选型取决于项目已有架构、实体规模、更新频率和迁移成本。
+用网格、空间哈希或层级空间结构筛选附近实体，减少两两比较；对象跨格时增量更新索引，按范围查询候选，再做精确距离／规则判断。
 
-推荐先回答算法：采用均匀网格／空间哈希或适合分布的层级索引，把全量两两比较改为邻近候选查询；按进入／离开阈值设置滞回，避免边界抖动。
-
-- 现有 GameObject 项目：用连续位置数组和稳定 ID，Job 并行生成兴趣变化，主线程消费进入／离开事件，改造成本较小。
-- 已经数据导向且实体很多：ECS 便于按组件批量处理，但要关注结构变化、Chunk 布局、共享组件划分与同步点。
-
-输出应采用线程安全的分区写入或并行容器，处理 ID 复用和销毁；测量热点区域聚集、移动突发、候选数量、结果合并和网络订阅成本，而非只看理论复杂度。
+数据布局保持连续，可分帧或用 Job 并行处理独立查询；使用 NativeContainer 时明确读写依赖。ECS 可帮助组织大量实体数据，但是否采用取决于现有架构与迁移成本。
 
 ## 七、架构与系统设计
 
@@ -1061,7 +953,7 @@ NativeContainer 持有原生内存，复制容器结构体通常仍指向同一�
 
 共享加载只取消某个等待者，不应随便取消其他窗口的加载。失败、重试、重复打开和关闭中完成都应有明确状态转换。
 
-### 76. 如何设计跨场景 ECS-like 组件系统？
+### 76. 如何设计跨场景的组件系统？
 
 **答案：**
 
@@ -1075,7 +967,7 @@ NativeContainer 持有原生内存，复制容器结构体通常仍指向同一�
 
 结构变更通过命令缓冲在安全点应用，异步结果校验 generation。序列化保存业务 ID，不使用 InstanceID 作为跨会话主键。不要仅因名称类似 ECS 就复制整套 DOTS 复杂度。
 
-### 77. Unity 中如何落地 MVC／MVVM？怎样避免复杂度失控？
+### 77. MVC 和 MVVM 如何应用于 Unity？
 
 **答案：**
 
@@ -1106,7 +998,7 @@ MVC／MVP 的风险是控制层变成大类、手动刷新遗漏；MVVM 的风�
 
 ## 八、脚本后端与原生交互
 
-### 79. Mono 与 IL2CPP 如何执行 C#？Unity 跨平台究竟意味着什么？
+### 79. Mono 和 IL2CPP 的执行流程有什么区别？
 
 **答案：**
 
@@ -1124,7 +1016,6 @@ IL2CPP 的优势在于 AOT 部署能力、目标平台工具链优化和平台�
 
 不能保证 IL2CPP 恒定快 1.5～2 倍，也不能仅凭后端名称判断包体、启动时间或所有 C# 特性支持情况。语言版本、API 配置、平台政策和后端能力是不同维度，旧版本平台支持列表应按实际项目重新核对。
 
-参考：[官方资料 1](https://docs.unity3d.com/6000.0/Documentation/Manual/il2cpp-introduction.html)。
 
 现代 .NET 本身也支持跨平台，不能沿用“.NET 只能运行于 Windows”的旧结论。通用渲染流水线与坐标变换见 [图形学与3D数学题库](图形学与3D数学题库.md)。
 
@@ -1141,24 +1032,13 @@ IL2CPP 环境仍支持许多反射用法，但运行时动态代码生成受到�
 
 平台对运行时生成可执行代码的限制，也不能说成“机器码不能映射到内存”——正常应用本身就在执行机器码。
 
-### 81. Unity 的 C# 包装对象如何与 C++ 原生对象关联？GCHandle 是必需的固定步骤吗？
+### 81. Unity 的 C# 对象与 C++ 原生对象如何关联？
 
 **答案：**
 
-先区分托管包装器和原生引擎对象，它们不是同一块内存，也不保证同时销毁。
+托管包装对象通过引擎维护的标识／内部关联访问原生对象，C# API 调用由绑定层转到原生实现。
 
-以 Unity 6000.0 公开绑定源码为例，`UnityEngine.Object` 包含 `m_CachedPtr`、`m_InstanceID` 等信息，绑定／封送层据此访问原生对象；这些是版本相关实现线索，不应扩写成完整的私有对象表规范。
-
-| 概念 | 应如何回答 |
-| --- | --- |
-| Native Object | 引擎侧对象，生命周期由对应引擎与资源机制管理 |
-| InstanceID | 当前会话对象身份，供部分定位、比较等逻辑使用，不是持久业务主键 |
-| GCHandle | 托管与原生互操作的句柄机制；Normal 可保活，Pinned 还涉及固定地址，二者不能混称 |
-| Binding／Marshalling | 负责调用和数据转换，不能把所有引擎 API 都统一描述为普通 P/Invoke |
-
-**重要纠错：**不能断言所有 Unity 对象都一一创建 Pinned GCHandle，或存在一个普遍实现 IDisposable 的 NativeObject 基类。普通 UnityEngine.Object 没有统一 Dispose 契约，应按 Destroy、资源系统 Release 或特定类型 Dispose 等具体机制处理。具体原生回调如何持有托管对象，需看对应后端和类型实现。
-
-参考：[官方资料 1](https://raw.githubusercontent.com/Unity-Technologies/UnityCsReference/6000.0/Runtime/Export/Scripting/UnityEngineObject.bindings.cs)。
+包装对象和原生对象生命周期并不完全相同，所以原生对象销毁后包装引用仍可能存在。具体使用哪些句柄和表是引擎实现细节，GCHandle 不是所有对象都固定经过的单一步骤。
 
 ### 82. 如何设计支持脚本热重载的系统？与编辑器 Domain Reload 有何区别？
 
@@ -1202,30 +1082,42 @@ Android 常通过 AndroidJavaObject／AndroidJavaClass 与 Java／Kotlin 桥接�
 
 明确调用线程、参数编码、对象引用与回调生命周期。原生回调未必在 Unity 主线程，应用引擎对象前应正确调度；释放托管委托前要保证原生端不再回调。UnitySendMessage 可用于部分简单消息，但不是所有交互的唯一入口。
 
-### 86. 【历史题】Unity 支持哪些脚本语言？怎样回答 Unity 与 Cocos 的比较？
+### 86. Unity 常用什么脚本语言？Unity 和 Cocos 有什么区别？
 
 **答案：**
 
-现代 Unity 的主要用户脚本语言是 C#；UnityScript 和 Boo 是历史支持，不能按旧题库列为现代默认选项。Lua 通常通过项目选用的第三方运行或桥接方案接入。
+现代 Unity 项目主要使用 C#；旧版 UnityScript、Boo 属于历史支持。Cocos 不同产品线可使用 TypeScript／JavaScript、C++ 等语言，比较时先明确产品和版本。
 
-引擎比较先明确产品与版本：Cocos2d-x 与 Cocos Creator 不是同一个开发栈。按 2D／3D 需求、平台、渲染与工具链、团队经验、原生扩展和维护成本比较。授权、费用和平台清单会变化，不沿用“永远免费”或旧 Flash／Wii 支持列表。
+常见比较维度是 2D／3D 需求、编辑器与资产流程、平台支持、团队语言经验、运行成本与生态；不能只靠“哪个引擎更快”决定。
 
-具体插件、语言版本与发布政策应查目标项目文档。
+## 参考资料
 
-## 易错结论速查
-
-| 容易背错的说法 | 更准确的理解 |
-| --- | --- |
-| 每帧都先执行一次 FixedUpdate | 一帧可能没有或有多次固定更新 |
-| 销毁脚本组件不会停止协程 | 销毁承载组件会停止；仅禁用组件不停止 |
-| 碰撞双方都必须有 Rigidbody | 静态 Collider 可以与动态刚体碰撞 |
-| SRP Batcher 把所有物体合成一次 Draw Call | 重点是减少 CPU 状态准备和提交成本 |
-| 改材质属性一定产生 GC | 分别检查实例创建、托管分配、原生资源和渲染更新 |
-| Unity GC 一定按 Gen 0／1／2 晋升 | 不可直接套用桌面 .NET 分代模型 |
-| Addressables Release 只需成功时处理 | 取消、失败与生命周期退出也需要配对管理 |
-| GUID 永久不变、InstanceID 可写入存档 | GUID 依赖 meta 保留；InstanceID 不跨会话稳定 |
-| 所有 Unity 对象都由 Pinned GCHandle 固定 | 不能把局部互操作方式概括为所有引擎对象的实现 |
-| IL2CPP 永远更快且不再需要 GC | 性能取决于场景，托管内存仍需运行时管理 |
-| Resources 全部资源启动即入内存 | 包含于交付内容与对象实际加载时机是两件事 |
-| Addressables 已取消 AssetBundle | Addressables 通常在其上提供地址、依赖与引用管理 |
-| Sprite 源图必须是 2 的幂 | 约束取决于导入、压缩与目标硬件 |
+- [Coroutines](https://docs.unity3d.com/6000.0/Documentation/Manual/Coroutines.html)
+- [MonoBehaviour.CancelInvoke](https://docs.unity3d.com/6000.0/Documentation/ScriptReference/MonoBehaviour.CancelInvoke.html)
+- [PrefabVariants](https://docs.unity3d.com/6000.0/Documentation/Manual/PrefabVariants.html)
+- [AssetDatabase.TryGetGUIDAndLocalFileIdentifier](https://docs.unity3d.com/6000.0/Documentation/ScriptReference/AssetDatabase.TryGetGUIDAndLocalFileIdentifier.html)
+- [UnityEngine.Object 官方说明](https://docs.unity3d.com/6000.0/Documentation/ScriptReference/Object.html)
+- [collider-types-interaction](https://docs.unity3d.com/6000.0/Documentation/Manual/collider-types-interaction.html)
+- [ContinuousCollisionDetection](https://docs.unity3d.com/6000.0/Documentation/Manual/ContinuousCollisionDetection.html)
+- [UIBasicLayout](https://docs.unity3d.com/Packages/com.unity.ugui@2.0/manual/UIBasicLayout.html)
+- [unity-ui-optimization-tips](https://unity.com/how-to/unity-ui-optimization-tips)
+- [render-pipelines-overview](https://docs.unity3d.com/6000.0/Documentation/Manual/render-pipelines-overview.html)
+- [optimizing-draw-calls](https://docs.unity3d.com/cn/2023.1/Manual/optimizing-draw-calls.html)
+- [shader-variants](https://docs.unity3d.com/6000.0/Documentation/Manual/shader-variants.html)
+- [shader-loading](https://docs.unity3d.com/6000.0/Documentation/Manual/shader-loading.html)
+- [Renderer-material](https://docs.unity3d.com/6000.0/Documentation/ScriptReference/Renderer-material.html)
+- [SRPBatcher](https://docs.unity3d.com/cn/2023.1/Manual/SRPBatcher.html)
+- [shadow-mapping](https://docs.unity3d.com/6000.0/Documentation/Manual/shadow-mapping.html)
+- [class-ScriptableObject](https://docs.unity3d.com/6000.0/Documentation/Manual/class-ScriptableObject.html)
+- [AssetBundles-Dependencies](https://docs.unity3d.com/6000.0/Documentation/Manual/AssetBundles-Dependencies.html)
+- [AssetBundle.Unload](https://docs.unity3d.com/6000.0/Documentation/ScriptReference/AssetBundle.Unload.html)
+- [MemoryManagement](https://docs.unity3d.com/Packages/com.unity.addressables@1.21/manual/MemoryManagement.html)
+- [AddressableAssetsAsyncOperationHandle](https://docs.unity3d.com/Packages/com.unity.addressables@1.21/manual/AddressableAssetsAsyncOperationHandle.html)
+- [运行时资源加载](https://docs.unity3d.com/6000.0/Documentation/Manual/LoadingResourcesatRuntime.html)
+- [Addressables 概览](https://docs.unity3d.com/Packages/com.unity.addressables@1.21/manual/AddressableAssetsOverview.html)
+- [performance-garbage-collector](https://docs.unity3d.com/6000.0/Documentation/Manual/performance-garbage-collector.html)
+- [async-await-support](https://docs.unity3d.com/6000.0/Documentation/Manual/async-await-support.html)
+- [async-awaitable-continuations](https://docs.unity3d.com/cn/6000.0/Manual/async-awaitable-continuations.html)
+- [index](https://docs.unity3d.com/Packages/com.unity.burst@1.8/manual/index.html)
+- [job-system-native-container](https://docs.unity3d.com/6000.0/Documentation/Manual/job-system-native-container.html)
+- [il2cpp-introduction](https://docs.unity3d.com/6000.0/Documentation/Manual/il2cpp-introduction.html)
