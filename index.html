@@ -61,7 +61,8 @@ if(location.hash.indexOf('#/docs/')===0){location.replace(location.href.split('#
 window.$docsify={
 name:'Unity 游戏客户端面试题库',repo:'https://github.com/doRedlive/gc-interview-nodes',
 basePath:'docs/',homepage:'面试题库总目录.md',
-loadSidebar:'https://doredlive.github.io/gc-interview-nodes/_sidebar.md',
+loadSidebar:true,
+alias:{'/.*_sidebar.md':new URL('_sidebar.md',location.href.split('#')[0]).href},
 relativePath:false,subMaxLevel:3,auto2top:true,
 search:{paths:['/面试题库总目录','/CSharp高频题整理','/Unity高频题整理','/算法高频题整理','/网络高频题整理','/Lua高频题整理','/图形学与3D数学题库','/性能分析与工具开发专项题','/Unity性能与工具开发岗位学习路线'],namespace:'gc-notes-v2',placeholder:'搜索题目、关键词或 API',noData:'没有找到匹配内容',depth:4}
 };
