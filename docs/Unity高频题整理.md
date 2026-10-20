@@ -1,6 +1,6 @@
 # Unity 面试题与答案
 
-> 共 86 题。按主题分类，答案直接放在题目后。
+> 共 100 题。按主题分类，答案直接放在题目后。
 
 [返回题库总目录](面试题库总目录.md)
 
@@ -17,6 +17,7 @@
 | [七、架构与系统设计](#%E4%B8%83%E3%80%81%E6%9E%B6%E6%9E%84%E4%B8%8E%E7%B3%BB%E7%BB%9F%E8%AE%BE%E8%AE%A1) | 75–78 |
 | [八、脚本后端与原生交互](#%E5%85%AB%E3%80%81%E8%84%9A%E6%9C%AC%E5%90%8E%E7%AB%AF%E4%B8%8E%E5%8E%9F%E7%94%9F%E4%BA%A4%E4%BA%92) | 79–82 |
 | [九、动画、平台与旧项目维护](#%E4%B9%9D%E3%80%81%E5%8A%A8%E7%94%BB%E3%80%81%E5%B9%B3%E5%8F%B0%E4%B8%8E%E6%97%A7%E9%A1%B9%E7%9B%AE%E7%BB%B4%E6%8A%A4) | 83–86 |
+| [十、SRP 与 SRP Batcher 专题](#%E5%8D%81%E3%80%81SRP%20%E4%B8%8E%20SRP%20Batcher%20%E4%B8%93%E9%A2%98) | 87–100 |
 
 ## 一、对象、生命周期与协程
 
@@ -391,7 +392,7 @@ SRP 通过 C# 接口组织渲染过程，包括相机剔除、对象筛选排序
 | GPU Instancing | 同网格与材质按实例数据绘制多份 | Shader 支持实例数据，适合重复物体 |
 | SRP Batcher | 优化兼容变体的材质／状态准备 | 主要降低 CPU 提交成本，不等于一个 Draw Call |
 
-用 Frame Debugger 查看未合批原因。材质、Pass、排序和变换等均可能影响兼容性；不要把所有缩放不一致都概括成动态合批必然失效。
+用 Frame Debugger 查看未合批原因。材质、Pass、排序和变换等均可能影响兼容性；不要把所有缩放不一致都概括成动态合批必然失效。SRP Batcher 的原理、兼容条件与失效排查的深入版见第 87–94 题。
 
 ### 33. 什么是 Draw Call？如何降低 Draw Call？
 
@@ -428,7 +429,7 @@ Variant 是同一 Shader 在不同关键字、Pass、平台等条件下的程序
 - 缓存 `Shader.PropertyToID`、材质引用和必要的临时容器，避免反复构造字符串、数组与新 Material。
 - `MaterialPropertyBlock` 可传递逐 Renderer 属性并复用，但是否划算取决于渲染路径；它会破坏传统 SRP Batcher 兼容性，不能当作 URP／HDRP 的通用最优方案。
 
-材质实例还涉及原生内存；托管 GC 不等于及时释放原生 Material。不同材质也不必然破坏 SRP Batcher，关键是兼容 Shader 变体和数据布局。
+材质实例还涉及原生内存；托管 GC 不等于及时释放原生 Material。不同材质也不必然破坏 SRP Batcher，关键是兼容 Shader 变体和数据布局。MPB 打断 SRP Batcher 的机制见第 92 题。
 
 ### 36. 实时阴影如何实现？Shadow Map 的成本和优化点是什么？
 
@@ -1089,6 +1090,154 @@ Android 常通过 AndroidJavaObject／AndroidJavaClass 与 Java／Kotlin 桥接�
 现代 Unity 项目主要使用 C#；旧版 UnityScript、Boo 属于历史支持。Cocos 不同产品线可使用 TypeScript／JavaScript、C++ 等语言，比较时先明确产品和版本。
 
 常见比较维度是 2D／3D 需求、编辑器与资产流程、平台支持、团队语言经验、运行成本与生态；不能只靠“哪个引擎更快”决定。
+
+## 十、SRP 与 SRP Batcher 专题
+
+### 87. SRP Batcher 是什么？它优化的是什么开销？
+
+**答案：**
+
+SRP Batcher 是 SRP（URP／HDRP／自定义 SRP）内置的渲染循环优化器，默认开启；内置管线不支持。它优化的不是 Draw Call 数量，而是 **Draw Call 之间的状态切换开销**：传统渲染循环中，每次切换材质都要做一次完整的 SetPass（绑定 Shader 程序、设置渲染状态、上传材质参数），这才是 CPU 提交的大头。
+
+SRP Batcher 把材质属性放进 GPU 上常驻的常量缓冲区：只要物体使用**同一个兼容的 Shader 变体**，即使材质不同，也不必重新绑定 Shader 与状态，只需更新缓冲区中对应材质的数据即可连续绘制。关键结论：Draw Call 数量基本不变，SetPass 次数大幅减少；不合并 Mesh 顶点，动态物体同样支持。
+
+### 88. 坑题：开启 SRP Batcher 后，DrawCall 数量一定下降吗？
+
+**答案：**
+
+不会。每个 Renderer 依然各自提交绘制命令，Draw Call 数量不变；下降的是 SetPass（材质／状态切换）次数与相应 CPU 提交开销。“SRP Batcher 合并了 Draw Call”是最常见的面试错误表述。衡量收益要看 Profiler／Frame Debugger 中的 SetPass 指标和 Batch 内的 Draw 数量，而不是只看 Draw Call 总数。
+
+### 89. SRP Batcher 的底层原理？UnityPerMaterial 与 UnityPerDraw 是什么？
+
+**答案：**
+
+SRP Batcher 要求把 Shader 的 uniform 按用途拆进两个常量缓冲区：
+
+```hlsl
+CBUFFER_START(UnityPerMaterial)
+    half4  _Color;
+    float4 _MainTex_ST;
+CBUFFER_END
+```
+
+- `UnityPerMaterial`：材质面板上的属性（`_Color`、`_MainTex_ST` 等），同一材质的所有使用者共享；**全部材质属性必须写进这个块**，写在块外的裸 uniform 会使 Shader 失去 SRP Batcher 兼容性（Shader Graph 生成默认合规）。
+- `UnityPerDraw`：每个实例不同的数据（`unity_ObjectToWorld` 等变换矩阵），由引擎自动填充，无需手写。
+
+GPU 侧维护一块持久的大常量缓冲区，各材质的 PerMaterial 数据常驻其中。绘制同变体序列时：绑定一次 Shader 程序与渲染状态 → 更新对应材质的缓冲区数据 → 绑定物体 PerDraw 数据 → Draw，连续 Draw 之间不再做完整 SetPass。纹理对象本身不进常量缓冲区，但采样器设置不一致仍可能打断批次。
+
+### 90. SRP Batcher 的兼容（触发）条件有哪些？
+
+**答案：**
+
+- 项目使用 SRP（URP／HDRP／自定义 SRP），内置管线不支持。
+- Shader 为 SRP 兼容 Shader：材质属性全部位于 `UnityPerMaterial`；Shader 面板会显示 “SRP Batcher compatible” 标记，Shader Graph 默认兼容。
+- 参与 Batch 的物体使用**同一个 Shader 变体**：Shader 相同且激活的关键字组合一致，关键字不同即视为不同变体。
+- Renderer 没有走 GPU Instancing 路径：单个 Renderer 上两者互斥，要么实例化要么 SRP Batcher。
+- 多 Pass 的旧式 Shader 会退回兼容模式或直接断批，具体行为按引擎版本核对。
+- 使用 MaterialPropertyBlock 的 Renderer 会脱离批次（见第 92 题）。
+
+### 91. SRP Batcher 常见失效原因？Frame Debugger 如何定位？
+
+**答案：**
+
+高频失效原因：
+
+1. 材质属性写在 `UnityPerMaterial` 之外（最常见，裸 uniform）。
+2. Shader 变体不一致：关键字／宏不同，例如部分物体接收阴影、部分不接收。
+3. 大量使用 MaterialPropertyBlock。
+4. 材质开启了 GPU Instancing，走了实例化路径。
+5. 多 Pass Shader 或渲染状态不一致（Blend、ZTest、ZWrite、Cull 不同）。
+6. 使用内置管线的旧 Shader，不是 SRP Shader。
+7. 贴图采样器参数（Filter、Wrap）不一致。
+8. 自定义 SRP 没有通过 RendererList／DrawRenderers 路径绘制场景物体。
+
+定位方法：Frame Debugger 捕获一帧，展开相机 → Render Opaques，其中的 “RenderLoopNewBatcher” 节点就是 SRP Batch；每项显示包含的 Draw 数量、当前 Shader 与激活关键字，并给出与上一个 Batch 的断批原因（不同 Shader、不同 Keywords、不同渲染状态等）。如果每个 Batch 内 Draw 数很少，通常说明变体过碎，要做关键字收敛与变体裁剪。
+
+### 92. MaterialPropertyBlock 为什么会打断 SRP Batcher？
+
+**答案：**
+
+MPB 的作用是给单个 Renderer 覆盖一组材质属性。SRP Batcher 的收益来自复用材质在 GPU 上常驻的 `UnityPerMaterial` 缓冲区；一旦某 Renderer 使用 MPB，它不再读取该材质的共享缓冲区，而携带一份独立参数，引擎无法把它与同材质的其他物体放进同一个 Batch，该物体被移出合批流或退回兼容路径。
+
+少量物体用 MPB 影响有限；大量 Renderer 都用 MPB（常见于特效逐实例调参）会让 SRP Batcher 基本失效。替代思路：把差异属性放回材质实例或用贴图通道／实例化属性承载，再按 Frame Debugger 实测确认。
+
+### 93. SRP Batcher 有哪些缺点与成本？对透明物体生效吗？
+
+**答案：**
+
+- 每个材质的 PerMaterial 数据常驻 GPU 显存，材质数量极多时显存上涨；常量缓冲区有大小上限，极端场景会自动切分批次。
+- Shader 编写约束强，存量项目迁移要整理 uniform，成本不小。
+- 收益高度依赖变体收敛：变体越多批次越碎，优化效果被稀释。
+- 与 MPB、GPU Instancing 的使用方式互相制约。
+
+对透明物体同样生效：只要变体与状态一致就能进同一个 SRP Batch。但透明队列按距离从后往前排序，不同变体／状态的物体更容易穿插，断批概率高于不透明队列。
+
+### 94. 项目中做 SRP Batcher 优化，你会怎么做？
+
+**答案：**
+
+1. 审计 Shader：Shader 面板确认 “SRP Batcher compatible”，把所有材质属性移入 `UnityPerMaterial`，清理裸 uniform，检查 Shader Graph 生成结果。
+2. 收敛变体：裁剪无用关键字，用 Shader Variant Collection 预热与裁剪，避免变体爆炸把批次切碎。
+3. 管控 MPB：仅少量特殊物体使用，把高频差异属性移回材质或改用其他逐实例数据方案。
+4. 统一渲染状态与采样器设置：同变体物体保持 Blend／ZTest／Cull／Filter／Wrap 一致。
+5. 用 Frame Debugger 持续观察 Batch 大小与断批原因，把“Batch 内 Draw 数”作为优化指标。
+6. 按物体特征选择路径：大量重复模型走 GPU Instancing，常规异构物体交给 SRP Batcher，避免无意义地开启 Instancing 互斥。
+7. 自定义 SRP 必须经 RendererList／DrawRenderers 绘制场景物体，手动 `CommandBuffer.DrawMesh` 不走 SRP Batcher。
+
+### 95. RenderPipeline、RenderPipelineAsset 与 ScriptableRenderContext 如何配合？
+
+**答案：**
+
+- `RenderPipelineAsset`：管线配置资产，挂到 Project Settings → Graphics；保存全局设置并作为工厂，负责创建 `RenderPipeline` 实例。
+- `RenderPipeline`：管线实例，重写 `Render(ScriptableRenderContext, Camera[])`，这是每帧渲染入口，相机遍历、剔除、各 Pass 编排都在这里。
+- `ScriptableRenderContext`：与底层图形 API 交互的上下文代理。Cull、SetupCameraProperties、DrawRendererList、`ExecuteCommandBuffer(cmd)` 都是先记录命令，直到 `context.Submit()` 才整体提交执行——SRP 是延迟提交模型，`CommandBuffer` 负责收集具体渲染指令。
+
+一句话：Asset 是配置与工厂，Pipeline 是每帧干活的实例，Context 是延迟提交命令的通道。
+
+### 96. 自定义 SRP 每一帧的渲染流程是什么？
+
+**答案：**
+
+1. 引擎取出激活的 `RenderPipelineAsset` 创建的管线实例，调用 `Render()`，传入 Context 与相机数组。
+2. 遍历相机，逐相机执行：构造剔除参数 → `context.Cull` → 设置相机属性 → 用 CommandBuffer 清理颜色／深度目标。
+3. 按设计的 Pass 顺序绘制：阴影贴图、不透明（通常由近到远减少 overdraw）、天空盒、透明（由远到近）、后处理。
+4. 所有命令经 Context 记录，最后 `context.Submit()` 一次性提交 GPU 执行并呈现。
+
+多相机先后顺序由相机 Depth／RenderType 与 Render 函数中的遍历顺序共同决定；相机越多提交与目标切换成本越高。
+
+### 97. SRP 中 Culling 怎么做？CullingResults 是什么？
+
+**答案：**
+
+剔除是 CPU 端的筛选：从相机取 `ScriptableCullingParameters`（视锥体、层掩码、阴影剔除设置，也可手动构造），调用 `context.Cull(ref parameters)` 得到 `CullingResults`。它保存本相机可见的渲染器列表、灯光与阴影数据，后续 `DrawRenderers`／RendererList 都基于这一结果绘制，不再遍历场景。
+
+要点：剔除结果按相机隔离；视锥剔除只做粗筛，被剔除的物体不产生 Draw Call，但遮挡剔除需要额外配置；阴影 Pass 会用独立的剔除参数再跑一次。
+
+### 98. RendererList 与 ShaderTagId 是什么？为什么不用 Graphics.DrawMesh 画场景物体？
+
+**答案：**
+
+`ShaderTagId` 是 Pass 标签字符串的哈希（对应旧管线的 LightMode），比较零字符串开销；URP 常见值有 `SRPDefaultUnlit`、`UniversalForward`、`DepthOnly`、`ShadowCaster`。`RendererListDesc` 描述过滤规则（渲染队列范围、ShaderTagId 列表、排序与层掩码），对 `CullingResults` 过滤后经 `CreateRendererList` 生成 `RendererList`，用 `DrawRendererList` 批量绘制——这是 SRP 绘制场景物体的标准路径，SRP Batcher 也只在这类路径上生效。
+
+`Graphics.DrawMesh` 是内置管线的立即提交接口，绕开 Context、剔除与合批体系，混用会导致顺序错乱、合批与阴影异常。自定义几何（全屏三角形、临时网格）应该用 CommandBuffer 记录绘制命令；场景 Renderer 必须走 RendererList／DrawRenderers。
+
+### 99. SRP 与多线程渲染是什么关系？
+
+**答案：**
+
+自定义 SRP 的 C# `Render()` 代码运行在主线程；Context 提交的命令由 Unity 图形底层投递到渲染线程／图形 Job 执行，实现 CPU 侧并行。SRP 并不会把用户编写的管线逻辑搬到子线程，C# 端的剔除构造、命令记录仍是主线程成本，做重了会直接反映在 CPU 帧时间里。新版本的 Render Graph 等机制会在内部做更多并行化，具体行为按版本核对，不要把“SRP = 多线程渲染管线”当成默认结论。
+
+### 100. 从零写一个极简自定义 SRP 的步骤？SRP 有什么缺点？
+
+**答案：**
+
+1. 新建 `RenderPipelineAsset` 子类，重写工厂方法返回自定义管线实例；资产挂到 Project Settings → Graphics。
+2. 新建 `RenderPipeline` 子类，重写 `Render(ScriptableRenderContext, Camera[])`。
+3. 遍历相机：取 `ScriptableCullingParameters` 并 `context.Cull`；设置相机属性；用 CommandBuffer 清屏。
+4. 构造 `RendererListDesc`（按 ShaderTagId 区分不透明／透明 Pass），`DrawRendererList` 完成绘制；需要阴影再加阴影 Pass。
+5. `context.Submit()` 提交全部命令，用 Frame Debugger 验证。
+
+SRP 的缺点：学习门槛高，需要理解图形 API 与管线概念；内置管线旧 Shader 大量不兼容需要重写；完整实现阴影、光照、后处理工作量巨大，实际项目一般基于 URP／HDRP 扩展而不是从零写；C# 层管线逻辑有 CPU 成本；第三方插件按管线版本适配。定位差异上，URP 面向移动端到主机的广谱硬件，HDRP 面向高端平台的高精度渲染（两者都基于 SRP，只是 Pipeline 内实现不同）。
 
 ## 参考资料
 
